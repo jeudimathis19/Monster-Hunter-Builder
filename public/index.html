@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monster Hunter Wilds - Hunter Builder</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="mh-header">
+    <div class="header-content">
+      <div class="logo">
+        <img src="https://www.monsterhunter.com/wilds/common/img/logo/mhws_logo.png" alt="Monster Hunter Wilds" onerror="this.style.display='none'">
+        <h1>Monster Hunter Wilds</h1>
+      </div>
+      <nav class="main-nav">
+        <a href="https://www.monsterhunter.com/wilds/fr/" target="_blank">Site officiel</a>
+        <a href="#" class="active">Builder</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h2 class="hero-title">Monster Hunter Builder</h2>
+      <p class="hero-subtitle">Configurez votre style de jeu et créez le build parfait pour vous</p>
+    </div>
+  </main>
+
+  <section class="builder-section">
+    <div class="container">
+      <div class="builder-layout">
+        <!-- Form Side -->
+        <div class="form-card">
+          <h3 class="form-title">Vos Préférences</h3>
+          <form id="builderForm" class="hunter-form">
+            <div class="form-group">
+              <label for="level">Niveau du Chasseur <span class="required">*</span></label>
+              <input type="number" id="level" name="level" min="1" max="999" placeholder="Entrez votre niveau" required>
+            </div>
+
+            <div class="form-group">
+              <label for="weapon">Arme Principale <span class="required">*</span></label>
+              <select id="weapon" name="weapon" required>
+                <option value="">Sélectionnez votre arme</option>
+                <option value="Great Sword">Great Sword - Grande Épée</option>
+                <option value="Long Sword">Long Sword - Épée Longue</option>
+                <option value="Sword & Shield">Sword & Shield - Épée et Bouclier</option>
+                <option value="Dual Blades">Dual Blades - Lames Doubles</option>
+                <option value="Hammer">Hammer - Marteau</option>
+                <option value="Hunting Horn">Hunting Horn - Cor de Chasse</option>
+                <option value="Lance">Lance</option>
+                <option value="Gunlance">Gunlance - Lancecanon</option>
+                <option value="Switch Axe">Switch Axe - Morpho Hache</option>
+                <option value="Charge Blade">Charge Blade - Volto Hache</option>
+                <option value="Insect Glaive">Insect Glaive - Insectoglaive</option>
+                <option value="Bow">Bow - Arc</option>
+                <option value="Heavy Bowgun">Heavy Bowgun - Fusarbalète Lourde</option>
+                <option value="Light Bowgun">Light Bowgun - Fusarbalète Légère</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="playstyle">Style de Jeu</label>
+              <select id="playstyle" name="playstyle">
+                <option value="">Sélectionnez votre style (optionnel)</option>
+                <option value="Agression">Agression - Attaque aggressive</option>
+                <option value="Defensif">Défensif - Joueur défensif</option>
+                <option value="Technique">Technique - Combat technique</option>
+                <option value="Support">Support - Aide à l'équipe</option>
+                <option value="Equilibre">Équilibré - Polyvalent</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="element">Élément Préféré</label>
+              <select id="element" name="element">
+                <option value="">Aucun préférence</option>
+                <option value="Fire">Feu</option>
+                <option value="Water">Eau</option>
+                <option value="Thunder">Foudre</option>
+                <option value="Ice">Glace</option>
+                <option value="Dragon">Dragon</option>
+                <option value="Poison">Poison</option>
+                <option value="Paralysis">Paralysie</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="priority">Priorité Principale</label>
+              <select id="priority" name="priority">
+                <option value="damage">Dégâts</option>
+                <option value="survivability">Survie</option>
+                <option value="utility">Utilité</option>
+                <option value="status">Statut</option>
+              </select>
+            </div>
+
+            <button type="submit" class="submit-btn">
+              <span class="btn-text">GÉNÉRER MON BUILD</span>
+              <span class="btn-icon">⚔️</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- Results Side -->
+        <div class="results-card">
+          <h3 class="form-title">Builds Générés</h3>
+          <div id="buildsList" class="builds-list">
+            <div class="empty-state">
+              <p>Configurez vos préférences et générez votre build idéal</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="favorites-section">
+    <div class="container">
+      <h3 class="section-title">Mes Favoris</h3>
+      <div id="favoritesList" class="hunters-grid">
+        <div class="empty-state">
+          <p>Aucun favori enregistré</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="mh-footer">
+    <div class="footer-content">
+      <p>&copy; 2025-2026 Capcom. Monster Hunter Wilds est une marque déposée de Capcom Co., Ltd.</p>
+      <p>Ce site est un fan-made et n'est pas affilié à Capcom.</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

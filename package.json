@@ -1,0 +1,26 @@
+{
+  "name": "monster-hunter-builder",
+  "version": "1.0.0",
+  "description": "A builder for Monster Hunter Wilds with choice of weapon and level.\r Multiple builds can be shown depending on the preferences.\r Last updated: March 2026",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeudimathis19/Monster-Hunter-Builder.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jeudimathis19/Monster-Hunter-Builder/issues"
+  },
+  "homepage": "https://github.com/jeudimathis19/Monster-Hunter-Builder#readme",
+  "dependencies": {
+    "better-sqlite3": "^12.8.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}
