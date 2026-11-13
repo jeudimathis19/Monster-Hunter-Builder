@@ -1,11 +1,13 @@
 {
   "name": "monster-hunter-builder",
   "version": "1.0.0",
-  "description": "A builder for Monster Hunter Wilds with choice of weapon and level.\r Multiple builds can be shown depending on the preferences.\r Last updated: March 2026",
+  "description": "Monster Hunter Wilds build planner: full gear database, custom builds, playstyle presets and community discovery.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "seed": "node scripts/seed.js",
+    "export": "node scripts/export.js",
+    "data": "npm run seed && npm run export"
   },
   "repository": {
     "type": "git",
@@ -22,5 +24,8 @@
     "better-sqlite3": "^12.8.0",
     "cors": "^2.8.6",
     "express": "^5.2.1"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

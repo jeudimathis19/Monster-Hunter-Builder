@@ -1,0 +1,4 @@
+monster_hunter.db-wal
+monster_hunter.db-shm
+*.log
+.env
