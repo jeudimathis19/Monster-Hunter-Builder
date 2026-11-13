@@ -29,9 +29,8 @@ In the Supabase dashboard:
      (and `http://localhost:3000/**` for local tests).
 2. **Authentication > Sign In / Providers > Email**: keep **Email** enabled. With **Confirm email** on,
    new accounts must click the link sent by email before signing in.
-3. Supabase's built-in mailer only sends a few emails per hour. For a public site, set up a custom SMTP
-   server (**Authentication > Emails > SMTP Settings**), or turn off **Confirm email** so sign-up does not
-   need an email (password reset still does).
+3. Supabase's built-in mailer only delivers to the project's team, a few emails per hour. For visitors to
+   receive their emails, set up Brevo and the Wilds Forge email templates: see [emails/README.md](emails/README.md).
 
 Re-running `schema.sql` is safe: it only adds what is missing and updates the functions.
 

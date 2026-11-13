@@ -4,7 +4,7 @@ import { t, getLang, setLang } from './i18n.js';
 import { prefs } from './store.js';
 import { loadData } from './data.js';
 import { html, mount, setTitle } from './ui.js';
-import { authEnabled, currentUser, handleAuthRedirect, onAuthChange } from './auth.js';
+import { authEnabled, currentUser, handleAuthRedirect, onAuthChange, isSignedIn, updateMetadata } from './auth.js';
 import { startSync } from './sync.js';
 
 const main = document.getElementById('main');
@@ -126,6 +126,7 @@ function init() {
   });
   document.querySelector('.lang-toggle').addEventListener('click', () => {
     setLang(getLang() === 'fr' ? 'en' : 'fr');
+    if (isSignedIn()) updateMetadata({ lang: getLang() }); // emails follow the visitor's language
     translateShell();
     render();
   });

@@ -1,6 +1,7 @@
 // Visitor accounts (Supabase Auth REST API, email + password, no SDK).
 
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+import { getLang } from './i18n.js';
 
 const BASE = SUPABASE_URL ? SUPABASE_URL.replace(/\/+$/, '') : '';
 const KEY = 'mhb:auth';
@@ -84,7 +85,7 @@ export async function accessToken() {
 export async function signUp(email, password, username) {
   const data = await call('signup', {
     query: `?redirect_to=${encodeURIComponent(redirectUrl('/account'))}`,
-    body: { email, password, data: { username } }
+    body: { email, password, data: { username, lang: getLang() } }
   });
   if (data.access_token) { await storeTokens(data); return { confirmed: true }; }
   return { confirmed: false };
@@ -113,6 +114,14 @@ export async function updatePassword(password) {
 
 export function setUsername(username) {
   if (session) save({ ...session, username });
+  updateMetadata({ username });
+}
+
+/** Account metadata used by the emails (username, language). Best effort. */
+export async function updateMetadata(data) {
+  const token = await accessToken();
+  if (!token) return;
+  try { await call('user', { method: 'PUT', token, body: { data } }); } catch { /* not critical */ }
 }
 
 /**
