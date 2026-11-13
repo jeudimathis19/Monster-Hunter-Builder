@@ -118,7 +118,7 @@ export async function render(el, { data, query }) {
     mount($('#b-stats-body', el), statsBlock(c));
     mount($('#b-skill-body', el), html`${skillTable(c)}${bonusTable(c)}`);
     mount($('#b-mats-body', el), materialsBlock(c, data, key));
-    mount($('#b-mon-body', el), c.monsters.length ? monstersBlock(c) : html`<p class="muted">${t('common.empty')}</p>`);
+    mount($('#b-mon-body', el), c.monsters.length ? monstersBlock(c, data) : html`<p class="muted">${t('common.empty')}</p>`);
     hunter.update(lookFor(c.r), renderAlt(c));
     save();
   };

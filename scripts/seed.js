@@ -19,7 +19,8 @@ const { hrForRarity, hrForMonster } = require('../lib/progression');
 
 const API = 'https://wilds.mhdb.io';
 const LOCALES = ['en', 'fr'];
-const ENDPOINTS = ['weapons', 'armor', 'armor/sets', 'decorations', 'charms', 'skills', 'items', 'monsters'];
+const ENDPOINTS = ['weapons', 'armor', 'armor/sets', 'decorations', 'charms', 'skills', 'items', 'monsters', 'locations'];
+const GATHERING = path.join(__dirname, 'gathering.json');
 const DB_PATH = path.join(__dirname, '..', 'monster_hunter.db');
 
 const fromArg = process.argv.find(a => a.startsWith('--from='));
@@ -102,6 +103,14 @@ async function main() {
       });
     };
 
+    // ---- Locations --------------------------------------------------------
+    const locationByName = new Map();
+    for (const l of en.locations) {
+      const f = frIdx.locations.get(l.id) || l;
+      locationByName.set(l.name.toLowerCase(), l.id);
+      insert('locations', { id: l.id, zone_count: l.zoneCount || null, name_en: l.name, name_fr: f.name });
+    }
+
     // ---- Monsters & drop sources ---------------------------------------
     const itemMinHr = new Map(); // item id -> lowest HR at which a monster drops it (high rank)
     const itemLowRank = new Set(); // items dropped in low rank
@@ -120,9 +129,16 @@ async function main() {
         locations_en: json((m.locations || []).map(l => l.name)),
         locations_fr: json((f.locations || m.locations || []).map(l => l.name))
       });
+      for (const l of m.locations || []) {
+        if (locationByName.has(l.name.toLowerCase())) insert('monster_locations', { monster_id: m.id, location_id: l.id });
+      }
       for (const rw of m.rewards || []) {
         ensureItem(rw.item);
         for (const c of rw.conditions || []) {
+          insert('item_drops', {
+            item_id: rw.item.id, monster_id: m.id, rank: c.rank, kind: c.kind, part: c.part || null,
+            quantity: c.quantity || 1, chance: Math.round(c.chance || 0)
+          });
           const key = `${rw.item.id}:${m.id}:${c.rank}`;
           if (!sourceSeen.has(key)) {
             sourceSeen.add(key);
@@ -135,6 +151,56 @@ async function main() {
           }
         }
       }
+    }
+
+    // ---- Gathering spots and other sources (wiki supplement) -------------
+    const monsterByName = new Map(en.monsters.map(m => [m.name.toLowerCase(), m.id]));
+    const itemByName = new Map(en.items.map(i => [i.name.toLowerCase(), i.id]));
+    const other = row => insert('item_other_sources', { name: null, monster_id: null, rank: null, method: null, chance: null, ...row });
+    const documented = new Set();
+    const gathering = fs.existsSync(GATHERING) ? JSON.parse(fs.readFileSync(GATHERING, 'utf8')).items : {};
+    for (const [name, info] of Object.entries(gathering)) {
+      const itemId = itemByName.get(name.toLowerCase());
+      if (!itemId) continue;
+      documented.add(itemId);
+      for (const loc of info.locations || []) {
+        const id = locationByName.get(loc.toLowerCase());
+        if (id) insert('item_locations', { item_id: itemId, location_id: id });
+      }
+      const seen = new Set();
+      for (const m of info.monsters || []) {
+        const label = m.name.replace(/\s+/g, ' ').trim();
+        const tempered = label.match(/^Tempered (.+)$/i);
+        if (tempered && monsterByName.has(tempered[1].toLowerCase())) {
+          other({ item_id: itemId, type: 'tempered', monster_id: monsterByName.get(tempered[1].toLowerCase()), rank: 'high' });
+        } else if (/tempered/i.test(label)) {
+          if (!seen.has('tempered-any')) { seen.add('tempered-any'); other({ item_id: itemId, type: 'tempered', rank: 'high' }); }
+        } else if (/frenzied/i.test(label)) {
+          other({ item_id: itemId, type: 'frenzied' });
+        } else if (m.rates && m.rates.length && /^[A-Za-z' .-]{3,30}$/.test(label)) {
+          // Small monster with documented rates. "+" materials only exist in High Rank.
+          const rank = /\+$/.test(name) ? 'high' : m.rank;
+          for (const [method, chance] of m.rates) {
+            const key = `${label}:${rank}:${method}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            other({ item_id: itemId, type: 'small-monster', name: label, rank, method: /carve/i.test(method) ? 'carve' : 'drop', chance });
+          }
+        }
+      }
+      for (const q of info.quests || []) {
+        const quest = q.replace(/\(\s*(Limited-Time )?(Event Quest|Side Mission|Optional Quest)\s*\)/i, '').replace(/\s+/g, ' ').trim();
+        if (!quest || /goes here|^[-?]+$/i.test(quest) || quest.length > 60) continue;
+        other({ item_id: itemId, type: 'quest', name: quest });
+      }
+    }
+    // Sources that follow a naming rule in the game.
+    for (const it of en.items) {
+      if (documented.has(it.id)) continue;
+      const cert = it.name.match(/^(.+) Certificate γ$/);
+      if (cert && monsterByName.has(cert[1].toLowerCase())) other({ item_id: it.id, type: 'arch-tempered', monster_id: monsterByName.get(cert[1].toLowerCase()), rank: 'high' });
+      else if (/^(Chata|Rathian|Pinnacle) Coin$/.test(it.name)) other({ item_id: it.id, type: 'arena' });
+      else if (/^(Blossomdance|Flamefete|Dreamspell|Lumenhymn) (Ticket|Catalog)$/.test(it.name)) other({ item_id: it.id, type: 'event' });
     }
 
     // HR needed for a recipe: rarity tier, raised by the hardest material to get.
@@ -262,10 +328,17 @@ async function main() {
   })();
 
   const count = t => db.prepare(`SELECT COUNT(*) AS n FROM ${t}`).get().n;
-  console.log('Database ready:', ['weapons', 'armor', 'armor_sets', 'decorations', 'charms', 'skills', 'items', 'monsters']
+  console.log('Database ready:', ['weapons', 'armor', 'armor_sets', 'decorations', 'charms', 'skills', 'items', 'monsters',
+    'locations', 'item_drops', 'item_locations', 'item_other_sources']
     .map(t => `${t}=${count(t)}`).join(' '));
-  db.pragma('journal_mode = DELETE');
-  db.exec('VACUUM');
+  // Fold the write-ahead log back into the main file so the database file is complete.
+  try {
+    db.pragma('wal_checkpoint(TRUNCATE)');
+    db.pragma('journal_mode = DELETE');
+    db.exec('VACUUM');
+  } catch (err) {
+    console.warn('Note: the database is in use by a running server. Restart it to load the new data.');
+  }
   db.close();
 }
 

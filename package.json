@@ -9,7 +9,8 @@
     "seed": "node scripts/seed.js",
     "export": "node scripts/export.js",
     "featured": "node scripts/featured.js",
-    "data": "npm run seed && npm run export && npm run featured"
+    "data": "npm run seed && npm run export && npm run featured",
+    "gathering": "node scripts/gathering.js"
   },
   "repository": {
     "type": "git",

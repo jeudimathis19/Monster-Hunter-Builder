@@ -1,0 +1,1417 @@
+{
+ "source": "https://monsterhunterwilds.wiki.fextralife.com",
+ "generated": "2026-11-13",
+ "items": {
+  "Iron Ore": {
+   "quests": [
+    "Hot on Their Tails",
+    "Balahara of the Sandsea",
+    "Pinnacle of the Pack",
+    "The Desert is Demanding",
+    "Fire Starter",
+    "Sand Sea Surges",
+    "A Stage of Rose and Thorn",
+    "Drive Off the Congalala!",
+    "Buggin' in the Scarlet Forest",
+    "A Sharp Sort",
+    "Every Rose",
+    "Tussle in Pink"
+   ],
+   "monsters": [],
+   "locations": [
+    "Windward Plains",
+    "Scarlet Forest",
+    "Oilwell Basin"
+   ]
+  },
+  "Carbalite Ore": {
+   "quests": [
+    "Continuing Conflict",
+    "Beware the Gypceros",
+    "A Sharp Squad",
+    "Doshaguma Hunt",
+    "Fur Damagings Are Dislikeworthy",
+    "Annihilating Anguish",
+    "Blangonga Excursion",
+    "What We Protect",
+    "Opposition",
+    "Astonishing Adaptability",
+    "As Gatekeeper"
+   ],
+   "monsters": [
+    {
+     "name": "Piragill",
+     "rank": "high",
+     "rates": [
+      [
+       "Dropped",
+       20
+      ]
+     ]
+    }
+   ],
+   "locations": [
+    "Windward Plains",
+    "Scarlet Forest",
+    "Iceshard Cliffs",
+    "Ruins of Wyveria"
+   ]
+  },
+  "Earth Crystal": {
+   "quests": [
+    "Buggin' in the Desert",
+    "The Desert is Demanding",
+    "Beware the Chatacabra",
+    "A Vow to Remain"
+   ],
+   "monsters": [
+    {
+     "name": "Talioth",
+     "rank": "high",
+     "rates": [
+      [
+       "Dropped",
+       20
+      ]
+     ]
+    },
+    {
+     "name": "Talioth",
+     "rank": "low",
+     "rates": [
+      [
+       "Dropped",
+       20
+      ]
+     ]
+    }
+   ],
+   "locations": [
+    "Windward Plains",
+    "Scarlet Forest",
+    "Ruins of Wyveria"
+   ]
+  },
+  "Mystery Bone": {
+   "quests": [
+    "Hot on Their Tails",
+    "Balahara of the Sandsea",
+    "Pinnacle of the Pack",
+    "Buggin' in the Desert",
+    "The Desert is Demanding",
+    "Beware the Chatacabra",
+    "Fire Starter",
+    "Sand Sea Surges",
+    "A Stage of Rose and Thorn",
+    "Drive Off the Congalala!",
+    "Buggin' in the Scarlet Forest",
+    "A Sharp Sort"
+   ],
+   "monsters": [
+    {
+     "name": "Bulaqchi",
+     "rank": "low",
+     "rates": [
+      [
+       "Dropped Materials",
+       20
+      ]
+     ]
+    },
+    {
+     "name": "Porkeplume",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       25
+      ]
+     ]
+    },
+    {
+     "name": "Rafma",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       25
+      ]
+     ]
+    }
+   ],
+   "locations": [
+    "Windward Plains",
+    "Scarlet Forest",
+    "Oilwell Basin",
+    "Ruins of Wyveria"
+   ]
+  },
+  "Colossal Bone": {
+   "quests": [
+    "Reward goes here..."
+   ],
+   "monsters": [
+    {
+     "name": "Conga",
+     "rank": "high",
+     "rates": [
+      [
+       "Carves",
+       50
+      ]
+     ]
+    },
+    {
+     "name": "Blango",
+     "rank": "high",
+     "rates": [
+      [
+       "Carves",
+       50
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Dragonbone Relic": {
+   "quests": [
+    "Roaring Rey Dau",
+    "Awakening From a Dream",
+    "When the Dust Settles",
+    "The Chains of Life",
+    "A World Turned Upside Down",
+    "Scorching the Earth Once More",
+    "Sinister Sneer",
+    "Troublemakers",
+    "Echoing from the Cliffs",
+    "The Struggle to Survive",
+    "An Inferno Laid Bare"
+   ],
+   "monsters": [],
+   "locations": [
+    "Windward Plains",
+    "Scarlet Forest",
+    "Oilwell Basin",
+    "Iceshard Cliffs",
+    "Ruins of Wyveria"
+   ]
+  },
+  "Herbivore Shell": {
+   "quests": [],
+   "monsters": [
+    {
+     "name": "Ceratonoth",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       70
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Bulaqchi Shell": {
+   "quests": [
+    "Buggin' in the Desert"
+   ],
+   "monsters": [
+    {
+     "name": "Bulaqchi",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       100
+      ],
+      [
+       "Dropped",
+       30
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Talioth Scale": {
+   "quests": [
+    "The Desert is Demanding"
+   ],
+   "monsters": [
+    {
+     "name": "Talioth",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       30
+      ],
+      [
+       "Dropped Materials",
+       70
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Sharp Fang": {
+   "quests": [
+    "The Desert is Demanding",
+    "A Sharp Sort",
+    "March of the Kranodath",
+    "Spread Those Wings"
+   ],
+   "monsters": [
+    {
+     "name": "Talioth",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       30
+      ]
+     ]
+    },
+    {
+     "name": "Gajios",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       100
+      ]
+     ]
+    },
+    {
+     "name": "Piragill",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       30
+      ],
+      [
+       "Dropped Materials",
+       30
+      ]
+     ]
+    },
+    {
+     "name": "Kranodath",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       25
+      ],
+      [
+       "Dropped Materials",
+       30
+      ]
+     ]
+    },
+    {
+     "name": "Porkeplume",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       75
+      ]
+     ]
+    },
+    {
+     "name": "Guardian Seikret",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       30
+      ],
+      [
+       "Dropped Materials",
+       30
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Wingdrake Hide": {
+   "quests": [],
+   "monsters": [
+    {
+     "name": "Baunos",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       100
+      ]
+     ]
+    },
+    {
+     "name": "Harpios",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       100
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Acute Fang": {
+   "quests": [
+    "A Vow to Remain",
+    "A Sharp Squad",
+    "Talk About Hard Headed!",
+    "Small White Feathers"
+   ],
+   "monsters": [
+    {
+     "name": "Talioth",
+     "rank": "high",
+     "rates": [
+      [
+       "Carves",
+       30
+      ],
+      [
+       "Dropped",
+       30
+      ]
+     ]
+    },
+    {
+     "name": "Gajios",
+     "rank": "high",
+     "rates": [
+      [
+       "Carves",
+       100
+      ]
+     ]
+    },
+    {
+     "name": "Piragill",
+     "rank": "high",
+     "rates": [
+      [
+       "Carves",
+       30
+      ],
+      [
+       "Dropped",
+       30
+      ]
+     ]
+    },
+    {
+     "name": "Kranodath",
+     "rank": "high",
+     "rates": [
+      [
+       "Carves",
+       30
+      ],
+      [
+       "Dropped",
+       30
+      ]
+     ]
+    },
+    {
+     "name": "Porkeplume",
+     "rank": "high",
+     "rates": [
+      [
+       "Carves",
+       75
+      ]
+     ]
+    },
+    {
+     "name": "Guardian Seikret",
+     "rank": "high",
+     "rates": [
+      [
+       "Carves",
+       30
+      ],
+      [
+       "Dropped",
+       30
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Great Hornfly": {
+   "quests": [
+    "Daughters of Carabosse"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Frenzy Shard": {
+   "quests": [
+    "Misty Depths",
+    "Aberrant Atrocity"
+   ],
+   "monsters": [
+    {
+     "name": "Frenzied Monsters - Break their Wounds",
+     "rank": null,
+     "rates": []
+    }
+   ],
+   "locations": []
+  },
+  "Herbivore Carapace": {
+   "quests": [
+    "Reward goes here..."
+   ],
+   "monsters": [
+    {
+     "name": "Ceratonoth",
+     "rank": "high",
+     "rates": [
+      [
+       "Carves",
+       70
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Bulaqchi Carapace": {
+   "quests": [
+    "Time to Exorcise"
+   ],
+   "monsters": [
+    {
+     "name": "Bulaqchi",
+     "rank": "high",
+     "rates": [
+      [
+       "Carves",
+       100
+      ],
+      [
+       "Dropped",
+       30
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Talioth Scale+": {
+   "quests": [
+    "The Desert is Demanding"
+   ],
+   "monsters": [
+    {
+     "name": "Talioth",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       30
+      ],
+      [
+       "Dropped Materials",
+       70
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Wingdrake Hide+": {
+   "quests": [],
+   "monsters": [
+    {
+     "name": "Baunos",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       100
+      ]
+     ]
+    },
+    {
+     "name": "Harpios",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       100
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Piragill Fin": {
+   "quests": [
+    "A Sharp Sort"
+   ],
+   "monsters": [
+    {
+     "name": "Piragill",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       70
+      ],
+      [
+       "Dropped Materials",
+       30
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Piragill Fin+": {
+   "quests": [
+    "A Sharp Sort"
+   ],
+   "monsters": [
+    {
+     "name": "Piragill",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       70
+      ],
+      [
+       "Dropped Materials",
+       30
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Kranodath Skull": {
+   "quests": [
+    "March of the Kranodath"
+   ],
+   "monsters": [
+    {
+     "name": "Kranodath",
+     "rank": null,
+     "rates": [
+      [
+       "Carves",
+       75
+      ],
+      [
+       "Dropped Materials",
+       30
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Kranodath Skull+": {
+   "quests": [
+    "March of the Kranodath"
+   ],
+   "monsters": [
+    {
+     "name": "Kranodath",
+     "rank": null,
+     "rates": [
+      [
+       "Carves",
+       75
+      ],
+      [
+       "Dropped Materials",
+       30
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Comaqchi Shell": {
+   "quests": [
+    "Buggin' in the Cliffs"
+   ],
+   "monsters": [
+    {
+     "name": "Comaqchi",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       100
+      ],
+      [
+       "Dropped",
+       30
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Comaqchi Carapace": {
+   "quests": [
+    "Dream Eaters"
+   ],
+   "monsters": [
+    {
+     "name": "Comaqchi",
+     "rank": "high",
+     "rates": [
+      [
+       "Carves",
+       100
+      ],
+      [
+       "Dropped",
+       30
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Guardian Seikret Feather": {
+   "quests": [
+    "Spread Those Wings"
+   ],
+   "monsters": [
+    {
+     "name": "Guardian Seikret",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       70
+      ],
+      [
+       "Dropped",
+       30
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Guardian Seikret Feather+": {
+   "quests": [
+    "Spread Those Wings"
+   ],
+   "monsters": [
+    {
+     "name": "Guardian Seikret",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       70
+      ],
+      [
+       "Dropped",
+       30
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Conga Pelt": {
+   "quests": [
+    "Reward goes here..."
+   ],
+   "monsters": [
+    {
+     "name": "Conga",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       50
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Conga Pelt+": {
+   "quests": [
+    "Reward goes here..."
+   ],
+   "monsters": [
+    {
+     "name": "Conga",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       50
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Vespoid Shell": {
+   "quests": [
+    "Buggin' in the Scarlet Forest"
+   ],
+   "monsters": [
+    {
+     "name": "Vespoid",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       42
+      ],
+      [
+       "Dropped Materials",
+       30
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Vespoid Carapace": {
+   "quests": [
+    "Vespoid Capriccio"
+   ],
+   "monsters": [
+    {
+     "name": "Vespoid",
+     "rank": "high",
+     "rates": [
+      [
+       "Carves",
+       42
+      ],
+      [
+       "Dropped Materials",
+       30
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Vespoid Wing": {
+   "quests": [
+    "Buggin' in the Scarlet Forest"
+   ],
+   "monsters": [
+    {
+     "name": "Vespoid",
+     "rank": "low",
+     "rates": [
+      [
+       "Carves",
+       35
+      ],
+      [
+       "Dropped Materials",
+       30
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Vespoid Innerwing": {
+   "quests": [
+    "Vespoid Capriccio"
+   ],
+   "monsters": [
+    {
+     "name": "Vespoid",
+     "rank": "high",
+     "rates": [
+      [
+       "Carves",
+       35
+      ],
+      [
+       "Dropped Materials",
+       30
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Blango Pelt+": {
+   "quests": [],
+   "monsters": [
+    {
+     "name": "Blango",
+     "rank": "high",
+     "rates": [
+      [
+       "Carves",
+       50
+      ]
+     ]
+    }
+   ],
+   "locations": []
+  },
+  "Lightcrystal": {
+   "quests": [
+    "Full Circle"
+   ],
+   "monsters": [],
+   "locations": [
+    "Windward Plains",
+    "Oilwell Basin",
+    "Ruins of Wyveria"
+   ]
+  },
+  "Firestone": {
+   "quests": [
+    "Long-forgotten Flame",
+    "Chemicus Nocturnus ( Event Quest )"
+   ],
+   "monsters": [],
+   "locations": [
+    "Oilwell Basin"
+   ]
+  },
+  "Fucium Ore": {
+   "quests": [
+    "Reward goes here..."
+   ],
+   "monsters": [],
+   "locations": [
+    "Ruins of Wyveria"
+   ]
+  },
+  "Charred Oilbone": {
+   "quests": [
+    "March of the Kranodath",
+    "Talk About Hard Headed!"
+   ],
+   "monsters": [
+    {
+     "name": "Kranodath",
+     "rank": "high",
+     "rates": [
+      [
+       "Dropped",
+       20
+      ]
+     ]
+    },
+    {
+     "name": "Kranodath",
+     "rank": "low",
+     "rates": [
+      [
+       "Dropped",
+       20
+      ]
+     ]
+    }
+   ],
+   "locations": [
+    "Oilwell Basin"
+   ]
+  },
+  "Frozen Icebone": {
+   "quests": [
+    "Hopes of Home",
+    "Buggin' in the Cliffs",
+    "Dream Eaters"
+   ],
+   "monsters": [
+    {
+     "name": "Comaqchi",
+     "rank": "high",
+     "rates": [
+      [
+       "Dropped",
+       20
+      ]
+     ]
+    },
+    {
+     "name": "Comaqchi",
+     "rank": "low",
+     "rates": [
+      [
+       "Dropped",
+       20
+      ]
+     ]
+    }
+   ],
+   "locations": [
+    "Iceshard Cliffs"
+   ]
+  },
+  "Quality Bone": {
+   "quests": [
+    "Continuing Conflict",
+    "Doshaguma Hunt",
+    "Fur Damagings Are Dislikeworthy",
+    "Annihilating Anguish",
+    "Aida's Apprehensions",
+    "Blangonga Excursion",
+    "What We Protect",
+    "Opposition",
+    "Astonishing Adaptability",
+    "As Gatekeeper"
+   ],
+   "monsters": [],
+   "locations": [
+    "Windward Plains",
+    "Scarlet Forest",
+    "Oilwell Basin",
+    "Iceshard Cliffs",
+    "Ruins of Wyveria"
+   ]
+  },
+  "Speartuna Fin": {
+   "quests": [],
+   "monsters": [
+    {
+     "name": "Speartuna",
+     "rank": null,
+     "rates": []
+    }
+   ],
+   "locations": [
+    "Scarlet Forest"
+   ]
+  },
+  "Commission Ticket": {
+   "quests": [
+    "Any: A balanced selection of items."
+   ],
+   "monsters": [
+    {
+     "name": "--",
+     "rank": null,
+     "rates": []
+    }
+   ],
+   "locations": []
+  },
+  "Mimiphyta Ticket": {
+   "quests": [
+    "Kut-Ku Gone Cuckoo ( Event Quest )"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Hunter Symbol I": {
+   "quests": [
+    "Tongue-Tied ( Event Quest )",
+    "Continuing Conflict",
+    "Fur Damagings Are Dislikeworthy",
+    "Thundering Flowers",
+    "Ballet in the Rain",
+    "Kut-Ku the Forest Conqueror ( Event Quest )",
+    "Putting Up A Stink ( Event Quest )"
+   ],
+   "monsters": [
+    {
+     "name": "Tempered Chatacabra",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Quematrice",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Lala Barina",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Congalala",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Balahara",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Rompopolo",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Nerscylla",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Yian Kut-Ku",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Gypceros",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Rathian",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Hirabami",
+     "rank": null,
+     "rates": []
+    }
+   ],
+   "locations": []
+  },
+  "Hunter Symbol II": {
+   "quests": [
+    "Troublemakers",
+    "Echoing from the Cliffs",
+    "The Struggle to Survive",
+    "Wreaking Havoc in Wyveria",
+    "No More Mister Ice Guy",
+    "Eldrich Enigma",
+    "The Claws Are Out"
+   ],
+   "monsters": [
+    {
+     "name": "Tempered Ajarakan",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Blangonga",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Xu Wu",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Guardian Ebony Odogaron",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Guardian Fulgur Anjanath",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Doshaguma",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Guardian Doshaguma",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Rathalos",
+     "rank": null,
+     "rates": []
+    },
+    {
+     "name": "Tempered Gravios",
+     "rank": null,
+     "rates": []
+    }
+   ],
+   "locations": []
+  },
+  "Hunter Symbol III": {
+   "quests": [
+    "Hungry for Ore?"
+   ],
+   "monsters": [
+    {
+     "name": "Any Tier 7 or Tier 8 quest with Tempered Apex monsters",
+     "rank": null,
+     "rates": []
+    }
+   ],
+   "locations": []
+  },
+  "Gracium": {
+   "quests": [
+    "Aberrant Atrocity (Side Mission)"
+   ],
+   "monsters": [],
+   "locations": [
+    "Iceshard Cliffs"
+   ]
+  },
+  "Expedition Headgear Ticket": {
+   "quests": [
+    "Like a Fire Hidden by Sand"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Blossom Ticket": {
+   "quests": [
+    "Daughters of Carabosse"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Blossomdance Catalog": {
+   "quests": [
+    "That Won't Work on Me!"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Amstrigian Ticket": {
+   "quests": [
+    "When Do Quematrice Sing?"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Sealed Dragon Cloth": {
+   "quests": [
+    "Running Wild ( Event Quest )"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Pinnacle Coin": {
+   "quests": [
+    "Doshaguma of the Hollow",
+    "Arena: Chatacabra",
+    "Arena: Rathian",
+    "Ignition to the Top",
+    "Mark of a True King",
+    "Unpierceable and Unstoppable",
+    "Boundless Blades"
+   ],
+   "monsters": [
+    {
+     "name": "Doshaguma",
+     "rank": null,
+     "rates": []
+    }
+   ],
+   "locations": []
+  },
+  "Felyne Ticket": {
+   "quests": [
+    "Three Tails Better Than None"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "SF6 Ticket": {
+   "quests": [
+    "Demonic Strength ( Arena Quest )"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Diving Ticket": {
+   "quests": [
+    "Pick Your Poison"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Flamefete Catalog": {
+   "quests": [
+    "Putting Up A Stink"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Worn Pickaxe": {
+   "quests": [
+    "Hungry for Ore? ( Limited-Time Event Quest )"
+   ],
+   "monsters": [
+    {
+     "name": "--",
+     "rank": null,
+     "rates": []
+    }
+   ],
+   "locations": []
+  },
+  "Necklace Ticket": {
+   "quests": [
+    "An Inferno Laid Bare"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Doshaguma Sketch": {
+   "quests": [
+    "A Vile Visage"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Omega Data 2.0": {
+   "quests": [
+    "Planetes Protocol (Savage)"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Dreamspell Ticket": {
+   "quests": [
+    "Login Bonuses (During Dreamspell Festival)",
+    "Limited Bounties (During Dreamspell Festival)"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Harvest Ticket": {
+   "quests": [
+    "Hirabami Harvest (Event Quest ★4)"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Dreamspell Catalog": {
+   "quests": [
+    "That Won't Faze Me! (Event Quest ★8)"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Skull Ticket": {
+   "quests": [
+    "Frenzy or Be Frenzied Upon"
+   ],
+   "monsters": [
+    {
+     "name": "--",
+     "rank": null,
+     "rates": []
+    }
+   ],
+   "locations": []
+  },
+  "Well-done Steak Recipe Book": {
+   "quests": [
+    "Meat at the Heart of Wyveria"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Lumenhymn Ticket": {
+   "quests": [
+    "Festival of Accord: Lumenhymn",
+    "Login Bonuses and daily Limited Bounties"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Lumenhymn Catalog": {
+   "quests": [
+    "It's Darker than You Think"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Orion Ticket": {
+   "quests": [
+    "The Snow Has Teeth"
+   ],
+   "monsters": [
+    {
+     "name": "Hunt 3 Tempered Blangonga",
+     "rank": null,
+     "rates": []
+    }
+   ],
+   "locations": []
+  },
+  "Wudwud Likey-like": {
+   "quests": [
+    "Reward for completing the 8★ event quest Playing the Long Game ."
+   ],
+   "monsters": [
+    {
+     "name": "Mizutsune and tempered Balahara in the Wounded Hollow.",
+     "rank": null,
+     "rates": []
+    }
+   ],
+   "locations": []
+  },
+  "Felyne Wanted Poster": {
+   "quests": [
+    "Lalas and Toads and Bears, Oh My!"
+   ],
+   "monsters": [
+    {
+     "name": "Hunt all target monsters Doshaguma , Lala Barina )",
+     "rank": null,
+     "rates": []
+    }
+   ],
+   "locations": [
+    "Scarlet Forest"
+   ]
+  },
+  "Gala Suit Ticket": {
+   "quests": [
+    "Razzle Dazzle Frazzle (Event Quest)"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Azure Stargem": {
+   "quests": [
+    "A Flash of Brilliance (Event Quest)"
+   ],
+   "monsters": [],
+   "locations": []
+  },
+  "Rompopolo Sketch": {
+   "quests": [
+    "Just What the Doctor Ordered (Event Quest)"
+   ],
+   "monsters": [],
+   "locations": [
+    "Oilwell Basin"
+   ]
+  }
+ }
+}

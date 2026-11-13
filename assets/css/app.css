@@ -104,6 +104,8 @@ small, .small { font-size: .875rem; }
 .container { width: 100%; max-width: var(--max); margin: 0 auto; padding: 0 1.25rem; }
 .page { padding-block: 2rem 3rem; }
 .noscript { padding: 1rem; text-align: center; }
+/* Keeps the footer below the fold while views load (no layout shift). */
+.site-main { flex: 1 0 auto; min-height: 100vh; }
 
 /* ------------------------------------------------------------------ Header */
 .site-header {
@@ -121,7 +123,7 @@ small, .small { font-size: .875rem; }
 .main-nav { margin-left: auto; }
 .main-nav ul { display: flex; gap: .25rem; list-style: none; margin: 0; padding: 0; }
 .main-nav a {
-  display: block; padding: .5rem .75rem; border-radius: var(--radius-sm);
+  display: block; white-space: nowrap; padding: .5rem .75rem; border-radius: var(--radius-sm);
   color: var(--text); text-decoration: none; font-weight: 600; font-size: .95rem; position: relative;
 }
 .main-nav a:hover { background: var(--surface-2); color: var(--text); }
@@ -402,6 +404,15 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .bonus-list li { padding: .55rem .7rem; border: 1px dashed var(--border); border-radius: var(--radius-sm); }
 .bonus-list li.is-active { border-style: solid; border-color: var(--teal); background: color-mix(in srgb, var(--teal) 8%, transparent); }
 .bonus-list p { margin: .3rem 0 0; font-size: .88rem; }
+.src { display: grid; gap: .25rem; }
+.src-line { display: block; }
+.src-zones { display: block; color: var(--teal); font-size: .8rem; }
+.src-zones:empty { display: none; }
+.src-more { display: block; font-size: .78rem; font-weight: 400; margin-left: 1.9rem; }
+.chip-zone { border-color: var(--teal); }
+.drop-table th[rowspan] { vertical-align: top; font-weight: 600; }
+.drop-table .badge { margin-left: .25rem; }
+.detail-h { margin-top: 1rem; }
 .monster-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
 .monster-list li { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; padding: .4rem .55rem; background: var(--surface-2); border-radius: var(--radius-sm); }
 .weak { display: inline-flex; gap: .5rem; margin-left: auto; }
@@ -486,6 +497,8 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
   position: absolute; left: -60px; top: 50px; width: 120px; height: 60px; border-radius: 50%;
   background: radial-gradient(ellipse, rgba(0,0,0,.45), transparent 70%); transform: rotateX(90deg) translateZ(-22px);
 }
+.h3d-deferred { display: grid; place-items: center; gap: .75rem; min-height: 360px; padding: 1rem; border-radius: var(--radius-sm);
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--accent) 14%, var(--surface-2)), var(--surface-2)); border: 1px solid var(--border); }
 .h3d-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .h3d-gl .h3d-stage { height: 440px; }
 .h3d-gl.h3d-compact .h3d-stage { height: 280px; }
@@ -506,7 +519,13 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .swatch { width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border-strong); cursor: pointer; padding: 0; }
 .swatch[aria-pressed="true"] { outline: 3px solid var(--accent); outline-offset: 2px; }
 .look-card { grid-template-columns: 1fr; }
-.look-render { margin-bottom: .6rem; }
+.look-render {
+  position: relative; margin-bottom: .6rem; min-height: 280px; display: grid; place-items: center; border-radius: var(--radius-sm);
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--accent) 14%, var(--surface-2)), var(--surface-2));
+  border: 1px solid var(--border);
+}
+.look-render .h3d { width: 100%; align-self: stretch; }
+.look-3d-btn { position: absolute; right: .5rem; bottom: .5rem; }
 .look-card .build-card-art { background: radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--teal) 18%, var(--surface-2)), var(--surface-2)); }
 
 /* ------------------------------------------------------------------ Encyclopedia */

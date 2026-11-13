@@ -7,6 +7,7 @@ import { loadText } from '../data.js';
 import { weaponPath, charmPath } from '../calc.js';
 import { encodeBuild } from '../codec.js';
 import { rarity, hrBadge, rankBadge, elementTag, slotsTag, sharpnessBar } from '../components.js';
+import { itemSourcesDetail, monsterDrops, sourceSummary, zoneNames } from '../sources.js';
 
 const CATS = ['weapons', 'armor', 'sets', 'decorations', 'charms', 'skills', 'items', 'monsters'];
 const PAGE = 50;
@@ -81,15 +82,24 @@ function categories(data) {
     },
     items: {
       list: data.items,
-      filters: [rarityFilter(data.items), { name: 'drop', label: t('db.sources'), options: data.monsters.filter(m => m.k === 'large').map(m => [String(m.id), m.n]), test: (x, v) => (data.sources[x.id] || []).some(([id]) => id === +v) }],
-      cols: [t('db.name'), t('db.rarity'), t('db.value'), t('builder.dropFrom')],
-      row: x => ['', rarity(x.r), `${num(x.v)} z`, html`<span class="wrap small">${[...new Set((data.sources[x.id] || []).map(([id]) => data.monsterById.get(id)?.n).filter(Boolean))].slice(0, 4).join(', ')}</span>`]
+      filters: [
+        rarityFilter(data.items),
+        { name: 'drop', label: t('src.monster'), options: data.monsters.filter(m => m.k === 'large').map(m => [String(m.id), m.n]), test: (x, v) => (data.sources[x.id] || []).some(([id]) => id === +v) },
+        { name: 'zone', label: t('src.zone'), options: data.locations.map(l => [String(l.id), l.n]),
+          test: (x, v) => (data.gather[x.id] || []).includes(+v) || (data.sources[x.id] || []).some(([id]) => (data.monsterById.get(id)?.loc || []).includes(+v)) },
+        { name: 'craft', label: t('src.usedFilter'), options: [['1', t('src.usedOnly')]], test: x => data.itemUsage.has(x.id) }
+      ],
+      cols: [t('db.name'), t('db.rarity'), t('db.value'), t('src.where')],
+      row: x => ['', rarity(x.r), `${num(x.v)} z`, html`<span class="wrap small">${sourceSummary(x.id, data, null)}</span>`]
     },
     monsters: {
       list: data.monsters,
-      filters: [{ name: 'weak', label: t('db.weaknesses'), options: ELEMENTS.map(e => [e, t(`el.${e}`)]), test: (x, v) => x.w.some(([type, lv]) => type === v && lv >= 2) }],
-      cols: [t('db.name'), t('db.type'), t('hr'), t('db.weaknesses')],
-      row: x => ['', x.sp || x.k, hrBadge(x.hr), html`<span class="inline-list">${x.w.filter(([type, lv]) => ELEMENTS.includes(type) && lv >= 2).map(([type, lv]) => html`<span class="el el-${type}">${t(`el.${type}`)} ${'★'.repeat(lv)}</span>`)}</span>`]
+      filters: [
+        { name: 'weak', label: t('db.weaknesses'), options: ELEMENTS.map(e => [e, t(`el.${e}`)]), test: (x, v) => x.w.some(([type, lv]) => type === v && lv >= 2) },
+        { name: 'zone', label: t('src.zone'), options: data.locations.map(l => [String(l.id), l.n]), test: (x, v) => x.loc.includes(+v) }
+      ],
+      cols: [t('db.name'), t('db.type'), t('hr'), t('db.locations'), t('db.weaknesses')],
+      row: x => ['', x.sp || x.k, hrBadge(x.hr), html`<span class="wrap small">${zoneNames(x.loc, data).join(', ')}</span>`, html`<span class="inline-list">${x.w.filter(([type, lv]) => ELEMENTS.includes(type) && lv >= 2).map(([type, lv]) => html`<span class="el el-${type}">${t(`el.${type}`)} ${'★'.repeat(lv)}</span>`)}</span>`]
     }
   };
 }
@@ -178,7 +188,6 @@ function detail(cat, x, data, text) {
       ${armor.length ? html`<h3>${t('db.armor')} (${armor.length})</h3><ul class="chips">${armor.slice(0, 30).map(a => html`<li class="chip"><a href="#/db/armor/${a.id}">${a.n}</a></li>`)}</ul>` : ''}`;
   }
   if (cat === 'items') {
-    const src = data.sources[x.id] || [];
     const usage = data.itemUsage.get(x.id) || [];
     const ref = ([type, id]) => {
       const obj = type === 'weapon' ? data.weaponById.get(id) : type === 'armor' ? data.armorById.get(id) : data.charmById.get(id);
@@ -187,16 +196,15 @@ function detail(cat, x, data, text) {
     };
     return html`${head()}${desc(text.items, x.id)}
       <dl class="kv"><dt>${t('db.value')}</dt><dd>${num(x.v)} z</dd></dl>
-      <h3>${t('db.sources')}</h3>${src.length ? html`<ul class="chips">${src.map(([id, rk]) => { const m = data.monsterById.get(id); return m ? html`<li class="chip"><a href="#/db/monsters/${id}">${m.n}</a> <small>${rk === 'h' ? t('rank.highShort') : t('rank.lowShort')}</small></li>` : ''; })}</ul>` : html`<p class="small muted">${t('builder.noDrop')}</p>`}
+      <h3 class="detail-h">${t('db.sources')}</h3>${itemSourcesDetail(x.id, data)}
       ${usage.length ? html`<h3>${t('db.usedIn')} (${usage.length})</h3><ul class="chips">${usage.slice(0, 40).map(ref)}</ul>` : ''}`;
   }
   if (cat === 'monsters') {
-    const drops = Object.entries(data.sources).filter(([, list]) => list.some(([id]) => id === x.id)).map(([itemId]) => data.itemById.get(+itemId)).filter(Boolean);
     return html`<h2 class="panel-title">${x.n}</h2><p class="badges"><span class="badge">${x.sp || x.k}</span>${hrBadge(x.hr)}</p>${desc(text.monsters, x.id)}
       <h3>${t('db.weaknesses')}</h3><ul class="chips">${x.w.map(([type, lv, cond]) => html`<li class="chip"><span class="el el-${type}">${t(`el.${type}`)}</span> ${'★'.repeat(lv)}${cond ? html` <small class="muted">${cond}</small>` : ''}</li>`)}</ul>
       ${x.res.length ? html`<h3>${t('db.resistant')}</h3><ul class="chips">${x.res.map(r => html`<li class="chip">${t(`el.${r}`)}</li>`)}</ul>` : ''}
-      ${x.loc && x.loc.length ? html`<h3>${t('db.locations')}</h3><p>${x.loc.join(', ')}</p>` : ''}
-      ${drops.length ? html`<h3>${t('db.drops')}</h3><ul class="chips">${drops.map(i => html`<li class="chip"><a href="#/db/items/${i.id}">${i.n}</a></li>`)}</ul>` : ''}`;
+      ${x.loc && x.loc.length ? html`<h3>${t('db.locations')}</h3><ul class="chips">${zoneNames(x.loc, data).map(n => html`<li class="chip chip-zone">${n}</li>`)}</ul>` : ''}
+      ${monsterDrops(x, data)}`;
   }
   return '';
 }

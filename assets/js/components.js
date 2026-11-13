@@ -6,6 +6,7 @@ import { icon } from './icons.js';
 import { lookFor } from './look.js';
 import { weaponPath } from './calc.js';
 import { checklist } from './store.js';
+import { sourceSummary, zoneNames } from './sources.js';
 
 export const rarity = r => html`<span class="badge rarity r${r}" title="${t('rarity', { n: r })}">${t('rarity', { n: r })}</span>`;
 export const hrBadge = n => html`<span class="badge badge-hr" title="${t('hr.required')} — ${t('hr.estimate')}">${t('hr.min', { n })}</span>`;
@@ -15,7 +16,7 @@ export const elementTag = (el, value, hidden) => el
   ? html`<span class="el el-${el}${hidden ? ' is-hidden' : ''}">${t(`el.${el}`)} ${value ? num(value) : ''}${hidden ? ' (?)' : ''}</span>`
   : '';
 export const slotsTag = slots => (slots && slots.length
-  ? html`<span class="slots" aria-label="${t('stat.slots')}: ${slots.join(', ')}">${slots.map(s => html`<span class="slot s${s}" aria-hidden="true">${s}</span>`)}</span>`
+  ? html`<span class="slots" role="img" aria-label="${t('stat.slots')}: ${slots.join(', ')}">${slots.map(s => html`<span class="slot s${s}" aria-hidden="true">${s}</span>`)}</span>`
   : html`<span class="muted">${t('builder.noSlots')}</span>`);
 
 const LABEL = { w: 'kind.weapon', charm: 'kind.charm' };
@@ -172,32 +173,28 @@ export function requirementsBlock(c, data) {
 export function materialsBlock(c, data, key) {
   if (!c.materials.length) return html`<p class="muted">${t('common.empty')}</p>`;
   const done = key ? checklist.get(key) : {};
-  const sources = item => {
-    const src = (data.sources[item.id] || []).filter(([, rk]) => (c.rank === 'high' ? rk === 'h' : rk === 'l'));
-    const list = (src.length ? src : data.sources[item.id] || []).map(([id]) => data.monsterById.get(id)).filter(m => m && m.k === 'large');
-    const uniq = [...new Map(list.map(m => [m.id, m])).values()];
-    return uniq.length ? uniq.slice(0, 4).map(m => m.n).join(', ') + (uniq.length > 4 ? '…' : '') : t('builder.noDrop');
-  };
   return html`<p class="small muted">${t('builder.checklistHint')}</p>
   <table class="table mats-table" data-check="${key || ''}">
     <caption class="sr-only">${t('stat.materials')}</caption>
-    <thead><tr><th scope="col"><span class="sr-only">✓</span></th><th scope="col">${t('db.name')}</th><th scope="col">×</th><th scope="col">${t('builder.dropFrom')}</th></tr></thead>
+    <thead><tr><th scope="col"><span class="sr-only">✓</span></th><th scope="col">${t('db.name')}</th><th scope="col">×</th><th scope="col">${t('src.where')}</th></tr></thead>
     <tbody>${c.materials.map(m => {
       const id = `m-${key || 'x'}-${m.item.id}`.replace(/[^\w-]/g, '');
       return html`<tr class="${done[m.item.id] ? 'is-done' : ''}">
       <td><input type="checkbox" id="${id}" data-item="${m.item.id}" ${done[m.item.id] ? raw('checked') : ''}></td>
-      <th scope="row"><label for="${id}"><span class="badge rarity r${m.item.r}" aria-hidden="true">${m.item.r}</span> ${m.item.n}</label></th>
+      <th scope="row"><label for="${id}"><span class="badge rarity r${m.item.r}" aria-hidden="true">${m.item.r}</span> ${m.item.n}</label>
+        <a class="src-more" href="#/db/items/${m.item.id}">${t('src.details')}<span class="sr-only"> : ${m.item.n}</span></a></th>
       <td class="num">${m.qty}</td>
-      <td class="small">${sources(m.item)}</td>
+      <td class="small">${sourceSummary(m.item.id, data, c.rank)}</td>
     </tr>`;
     })}</tbody>
   </table>`;
 }
 
-export function monstersBlock(c) {
+export function monstersBlock(c, data) {
   if (!c.monsters.length) return '';
   return html`<ul class="monster-list">${c.monsters.slice(0, 10).map(m => html`<li>
-    <strong>${m.monster.n}</strong> <span class="muted small">${t('hr.min', { n: m.monster.hr })} · ${m.items.length} ${t('stat.materials').toLowerCase()}</span>
+    <a href="#/db/monsters/${m.monster.id}"><strong>${m.monster.n}</strong></a> <span class="muted small">${t('hr.min', { n: m.monster.hr })} · ${m.items.length} ${t('stat.materials').toLowerCase()}</span>
+    ${data ? html`<span class="src-zones">${zoneNames(m.monster.loc, data).join(', ')}</span>` : ''}
     <span class="weak">${m.monster.w.filter(([, lv]) => lv >= 2).slice(0, 3).map(([type]) => html`<span class="el el-${type}">${t(`el.${type}`)}</span>`)}</span>
   </li>`)}</ul>`;
 }
@@ -219,14 +216,14 @@ export function bindChecklist(root) {
 /** Full detail sheet: requirements, stats, skills, bonuses, gear, materials, monsters. */
 export function buildSheet(c, data, { key, renderSlot = true } = {}) {
   return html`<div class="sheet">
-    ${renderSlot ? html`<section class="panel panel-render" aria-labelledby="sheet-render"><h3 id="sheet-render" class="panel-title">${t('render.title')}</h3><div class="render-slot"></div></section>` : ''}
-    <section class="panel" aria-labelledby="sheet-req"><h3 id="sheet-req" class="panel-title">${t('view.requirements')}</h3>${requirementsBlock(c, data)}</section>
-    <section class="panel" aria-labelledby="sheet-gear"><h3 id="sheet-gear" class="panel-title">${t('render.pieces')}</h3>${gearList(c, data)}</section>
-    <section class="panel" aria-labelledby="sheet-stats"><h3 id="sheet-stats" class="panel-title">${t('view.overview')}</h3>${statsBlock(c)}</section>
-    <section class="panel" aria-labelledby="sheet-skills"><h3 id="sheet-skills" class="panel-title">${t('stat.skills')}</h3>${skillTable(c)}${bonusTable(c)}</section>
-    <section class="panel" aria-labelledby="sheet-mats"><h3 id="sheet-mats" class="panel-title">${t('builder.checklist')}</h3>${materialsBlock(c, data, key)}
+    ${renderSlot ? html`<section class="panel panel-render" aria-labelledby="sheet-render"><h2 id="sheet-render" class="panel-title">${t('render.title')}</h2><div class="render-slot"></div></section>` : ''}
+    <section class="panel" aria-labelledby="sheet-req"><h2 id="sheet-req" class="panel-title">${t('view.requirements')}</h2>${requirementsBlock(c, data)}</section>
+    <section class="panel" aria-labelledby="sheet-gear"><h2 id="sheet-gear" class="panel-title">${t('render.pieces')}</h2>${gearList(c, data)}</section>
+    <section class="panel" aria-labelledby="sheet-stats"><h2 id="sheet-stats" class="panel-title">${t('view.overview')}</h2>${statsBlock(c)}</section>
+    <section class="panel" aria-labelledby="sheet-skills"><h2 id="sheet-skills" class="panel-title">${t('stat.skills')}</h2>${skillTable(c)}${bonusTable(c)}</section>
+    <section class="panel" aria-labelledby="sheet-mats"><h2 id="sheet-mats" class="panel-title">${t('builder.checklist')}</h2>${materialsBlock(c, data, key)}
       <p class="small muted">${t('builder.decoNote')}</p></section>
-    ${c.monsters.length ? html`<section class="panel" aria-labelledby="sheet-mon"><h3 id="sheet-mon" class="panel-title">${t('stat.monsters')}</h3>${monstersBlock(c)}</section>` : ''}
+    ${c.monsters.length ? html`<section class="panel" aria-labelledby="sheet-mon"><h2 id="sheet-mon" class="panel-title">${t('stat.monsters')}</h2>${monstersBlock(c, data)}</section>` : ''}
   </div>`;
 }
 

@@ -23,6 +23,17 @@ function index(d) {
   d.skillByKey = new Map(d.skills.map(s => [s.key, s]));
   d.itemById = byId(d.items);
   d.monsterById = byId(d.monsters);
+  d.locationById = byId(d.locations);
+  // Large monsters dropping each item, per rank: item id -> [[monsterId, 'l'|'h']]
+  d.sources = {};
+  for (const [itemId, list] of Object.entries(d.drops)) {
+    const seen = new Set();
+    d.sources[itemId] = [];
+    for (const [monsterId, rk] of list) {
+      const key = `${monsterId}${rk}`;
+      if (!seen.has(key)) { seen.add(key); d.sources[itemId].push([monsterId, rk]); }
+    }
+  }
   d.weaponById = byId(d.weapons);
   d.armorById = byId(d.armor);
   d.setById = byId(d.sets);
