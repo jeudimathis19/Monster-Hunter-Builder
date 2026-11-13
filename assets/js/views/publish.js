@@ -3,8 +3,8 @@
 import { html, raw, openDialog, toast } from '../ui.js';
 import { t, getLang, STYLES } from '../i18n.js';
 import { icon } from '../icons.js';
-import { hasCommunity, publishBuild, updateBuild } from '../api.js';
-import { owned } from '../store.js';
+import { hasCommunity, publishBuild, updateBuild, canEdit } from '../api.js';
+import { currentUser } from '../auth.js';
 
 /**
  * @param {object} opts { type: 'build'|'cosmetic', build, name, style, editId, existing }
@@ -15,7 +15,8 @@ export async function publishDialog({ type = 'build', build, name = '', style = 
     toast(t('publish.offline'), 'error');
     return null;
   }
-  const isEdit = editId && owned.token(editId);
+  const isEdit = editId && await canEdit(editId);
+  const user = currentUser();
   const styles = type === 'cosmetic' ? [] : [...STYLES, 'custom'];
   const value = await openDialog(html`
     <form method="dialog" class="publish-form">
@@ -26,8 +27,9 @@ export async function publishDialog({ type = 'build', build, name = '', style = 
       <div class="dialog-body form">
         <label class="field"><span>${t('publish.name')} *</span>
           <input type="text" name="name" maxlength="60" required value="${existing.name || name}"></label>
+        ${user && user.username ? html`<p class="small muted">${t('acc.publishAs', { name: user.username })}</p>` : html`
         <label class="field"><span>${t('publish.author')}</span>
-          <input type="text" name="author" maxlength="32" autocomplete="nickname" value="${existing.author || ''}"></label>
+          <input type="text" name="author" maxlength="32" autocomplete="nickname" value="${existing.author || ''}"></label>`}
         ${styles.length ? html`<label class="field"><span>${t('publish.style')}</span><select name="playstyle">
           ${styles.map(s => html`<option value="${s}" ${s === (existing.playstyle || style) ? raw('selected') : ''}>${t(`style.${s}`)}</option>`)}</select></label>` : ''}
         <label class="field"><span>${t('publish.description')}</span>

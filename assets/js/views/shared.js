@@ -3,9 +3,16 @@
 import { html, raw, toast, copyText } from '../ui.js';
 import { t } from '../i18n.js';
 import { icon } from '../icons.js';
-import { favorites } from '../store.js';
+import { favorites, owned } from '../store.js';
 import { encodeBuild } from '../codec.js';
 import { buildKey } from '../calc.js';
+import { currentUser } from '../auth.js';
+
+/** True when a listed build was published from this browser or by the signed-in account. */
+export function isOwn(b) {
+  const user = currentUser();
+  return !!(owned.token(b.id) || (user && user.username && b.author === user.username));
+}
 
 const registry = new Map();
 let seq = 0;

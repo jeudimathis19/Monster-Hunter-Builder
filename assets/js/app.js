@@ -4,6 +4,8 @@ import { t, getLang, setLang } from './i18n.js';
 import { prefs } from './store.js';
 import { loadData } from './data.js';
 import { html, mount, setTitle } from './ui.js';
+import { authEnabled, currentUser, handleAuthRedirect, onAuthChange } from './auth.js';
+import { startSync } from './sync.js';
 
 const main = document.getElementById('main');
 
@@ -17,7 +19,8 @@ const ROUTES = [
   { re: /^\/cosmetic\/edit$/, name: 'cosmetic', load: () => import('./views/cosmetic-edit.js') },
   { re: /^\/cosmetic\/([\w-]+)$/, name: 'cosmetic', load: () => import('./views/cosmetic-view.js') },
   { re: /^\/db\/(\w+)(?:\/(\d+))?$/, name: 'db', load: () => import('./views/database.js') },
-  { re: /^\/favorites$/, name: 'favorites', load: () => import('./views/favorites.js') }
+  { re: /^\/favorites$/, name: 'favorites', load: () => import('./views/favorites.js') },
+  { re: /^\/account$/, name: 'account', load: () => import('./views/account.js') }
 ];
 
 let current = null;
@@ -38,6 +41,17 @@ function translateShell() {
   lang.querySelector('.lang-long').textContent = ` – ${t('lang.switch')}`;
   lang.setAttribute('lang', getLang() === 'fr' ? 'en' : 'fr');
   updateThemeButton();
+  updateAccountLink();
+}
+
+/** Header account button: "Account" or the signed-in username. */
+function updateAccountLink() {
+  const link = document.querySelector('.account-link');
+  if (!link) return;
+  link.hidden = !authEnabled();
+  const user = currentUser();
+  link.querySelector('.account-label').textContent = user ? user.username || t('nav.account') : t('nav.account');
+  link.setAttribute('aria-label', user ? t('acc.signedIn', { name: user.username }) : t('nav.account'));
 }
 
 function updateThemeButton() {
@@ -124,7 +138,13 @@ function init() {
   document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('nav-open')) { closeNav(); toggle.focus(); } });
 
   window.addEventListener('hashchange', render);
-  render();
+  onAuthChange(updateAccountLink);
+  startSync();
+  // Links from confirmation / password-reset emails land with tokens in the URL hash.
+  handleAuthRedirect().then(route => {
+    if (route) location.replace(`#${route}`);
+    else render();
+  }, () => render());
 }
 
 init();

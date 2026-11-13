@@ -18,6 +18,23 @@ The anon key is meant to be public: visitors can only read the `builds_public` v
 deleting and likes go through SQL functions that validate the input and check each build's secret edit
 token (kept hashed). Never put the `service_role` key in the site.
 
+## Visitor accounts
+
+Visitors can create an account (email + password) to keep their favorites and creations on every device.
+In the Supabase dashboard:
+
+1. **Authentication > URL Configuration**
+   - **Site URL**: `https://jeudimathis19.github.io/Monster-Hunter-Builder/`
+   - **Redirect URLs**: add `https://jeudimathis19.github.io/Monster-Hunter-Builder/**`
+     (and `http://localhost:3000/**` for local tests).
+2. **Authentication > Sign In / Providers > Email**: keep **Email** enabled. With **Confirm email** on,
+   new accounts must click the link sent by email before signing in.
+3. Supabase's built-in mailer only sends a few emails per hour. For a public site, set up a custom SMTP
+   server (**Authentication > Emails > SMTP Settings**), or turn off **Confirm email** so sign-up does not
+   need an email (password reset still does).
+
+Re-running `schema.sql` is safe: it only adds what is missing and updates the functions.
+
 ## Moderation
 
 Builds can be removed from **Table Editor > builds** in the Supabase dashboard.

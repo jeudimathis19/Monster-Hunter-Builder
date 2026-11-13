@@ -3,12 +3,11 @@
 import { html, raw, mount, toast, debounce, setTitle, $ } from '../ui.js';
 import { t, WEAPON_KINDS, STYLES } from '../i18n.js';
 import { icon } from '../icons.js';
-import { owned } from '../store.js';
 import { computeBuild, sanitize } from '../calc.js';
 import { loadFeatured } from '../data.js';
 import { buildCard } from '../components.js';
 import { listBuilds, likeBuild, hasCommunity } from '../api.js';
-import { cardActions, bindCardActions } from './shared.js';
+import { cardActions, bindCardActions, isOwn } from './shared.js';
 
 export async function render(el, { data }) {
   setTitle(t('discover.title'));
@@ -70,7 +69,7 @@ export async function render(el, { data }) {
           return buildCard({
             id: b.id, title: b.name,
             subtitle: t('common.by', { name: b.author || t('common.anonymous') }),
-            tags: html`<span class="badge">${t(`style.${b.playstyle}`)}</span>${owned.token(b.id) ? html`<span class="badge badge-variant">${t('discover.yours')}</span>` : ''}`,
+            tags: html`<span class="badge">${t(`style.${b.playstyle}`)}</span>${isOwn(b) ? html`<span class="badge badge-variant">${t('discover.yours')}</span>` : ''}`,
             c,
             footer: html`<p class="card-meta">
               <button type="button" class="btn btn-sm${b.liked ? ' is-on' : ''}" data-like="${b.id}" aria-pressed="${b.liked}">${raw(icon('heart', { size: 16 }))}<span>${t('discover.likes', { n: b.likes })}</span></button>

@@ -133,12 +133,18 @@ small, .small { font-size: .875rem; }
   background: linear-gradient(90deg, transparent, var(--accent), transparent);
 }
 .header-tools { display: flex; gap: .4rem; align-items: center; }
+.account-link { max-width: 160px; }
+.account-link .account-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-link[aria-current="page"] { color: var(--accent); }
+@media (max-width: 1180px) { .account-link .account-label { display: none; } .account-link { padding-inline: .6rem; } }
+.account-box { max-width: 520px; margin-inline: auto; }
+.account-name { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
 .nav-toggle { display: none; }
 .theme-toggle .icon-moon { display: none; }
 [data-theme="light"] .theme-toggle .icon-sun { display: none; }
 [data-theme="light"] .theme-toggle .icon-moon { display: block; }
 
-@media (max-width: 980px) {
+@media (max-width: 1100px) {
   .nav-toggle { display: inline-flex; margin-left: auto; }
   .main-nav {
     position: absolute; top: 100%; left: 0; right: 0; margin: 0;
@@ -247,7 +253,7 @@ small, .small { font-size: .875rem; }
 .field { display: flex; flex-direction: column; gap: .35rem; }
 .field > span, .field > label, legend { font-weight: 600; font-size: .9rem; }
 .hint { font-size: .82rem; color: var(--muted); }
-input[type="text"], input[type="search"], input[type="number"], select, textarea {
+input[type="text"], input[type="search"], input[type="number"], input[type="email"], input[type="password"], select, textarea {
   font: inherit; color: var(--text); background: var(--bg-2);
   border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
   padding: .55rem .7rem; min-height: 44px; width: 100%;

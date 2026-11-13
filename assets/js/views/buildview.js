@@ -3,13 +3,12 @@
 import { html, raw, mount, toast, openDialog, setTitle, $ } from '../ui.js';
 import { t } from '../i18n.js';
 import { icon } from '../icons.js';
-import { owned } from '../store.js';
 import { computeBuild, sanitize, buildKey } from '../calc.js';
 import { decodeBuild } from '../codec.js';
 import { lookFor } from '../look.js';
 import { mountHunter } from '../hunter3d.js';
 import { buildSheet, bindChecklist, renderAlt, rankBadge, hrBadge } from '../components.js';
-import { getBuild, likeBuild, deleteBuild, hasCommunity } from '../api.js';
+import { getBuild, likeBuild, deleteBuild, hasCommunity, canEdit } from '../api.js';
 import { cardActions, bindCardActions } from './shared.js';
 
 export async function render(el, { data, params, query }) {
@@ -32,7 +31,7 @@ export async function render(el, { data, params, query }) {
 
   const build = sanitize(entry.build, data);
   const c = computeBuild(build, data);
-  const isMine = id && owned.token(id);
+  const isMine = id && await canEdit(id);
   setTitle(entry.name);
 
   mount(el, html`

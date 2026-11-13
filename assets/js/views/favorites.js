@@ -6,7 +6,8 @@ import { icon } from '../icons.js';
 import { favorites, owned } from '../store.js';
 import { computeBuild, sanitize } from '../calc.js';
 import { buildCard } from '../components.js';
-import { getBuild, hasCommunity } from '../api.js';
+import { getBuild, hasCommunity, myBuilds, accountsEnabled } from '../api.js';
+import { isSignedIn } from '../auth.js';
 import { cardActions, bindCardActions } from './shared.js';
 import { encodeBuild } from '../codec.js';
 import { lookInfo } from './cosmetic.js';
@@ -89,14 +90,20 @@ export async function render(el, { data }) {
 
   // Own publications
   const pub = $('#f-pub-list', el);
-  const ids = Object.keys(owned.all());
   if (!hasCommunity()) { mount(pub, html`<p class="muted">${t('publish.offline')}</p>`); return; }
-  if (!ids.length) { mount(pub, html`<p class="empty">${t('common.empty')}</p>`); return; }
-  const items = (await Promise.all(ids.map(id => getBuild(id).catch(err => (err.status === 404 ? (owned.remove(id), null) : null))))).filter(Boolean);
-  mount(pub, items.length ? html`<ul class="monster-list">${items.map(b => html`<li>
+  const signedIn = accountsEnabled() && isSignedIn();
+  let items = [];
+  if (signedIn) { try { items = await myBuilds(); } catch { items = []; } }
+  const known = new Set(items.map(b => b.id));
+  const localIds = Object.keys(owned.all()).filter(id => !known.has(id));
+  const local = (await Promise.all(localIds.map(id => getBuild(id).catch(err => (err.status === 404 ? (owned.remove(id), null) : null))))).filter(Boolean);
+  items = [...items, ...local];
+  const prompt = accountsEnabled() && !signedIn
+    ? html`<p class="alert alert-info">${t('acc.signInToSync')} <a href="#/account">${t('acc.signin')}</a> · <a href="#/account?mode=signup">${t('acc.signup')}</a></p>` : '';
+  mount(pub, items.length ? html`${prompt}<ul class="monster-list">${items.map(b => html`<li>
     <a href="#/${b.type === 'cosmetic' ? 'cosmetic' : 'build'}/${b.id}"><strong>${b.name}</strong></a>
     <span class="badge">${b.type === 'cosmetic' ? t('nav.cosmetic') : t(`style.${b.playstyle}`)}</span>
     <span class="muted small">${t('discover.likes', { n: b.likes })} · ${t('discover.views', { n: b.views })}</span>
     <a class="btn btn-sm" href="#/${b.type === 'cosmetic' ? 'cosmetic/edit' : 'builder'}?edit=${b.id}">${raw(icon('edit', { size: 16 }))}${t('common.edit')}</a>
-  </li>`)}</ul>` : html`<p class="empty">${t('common.empty')}</p>`);
+  </li>`)}</ul>` : html`${prompt}<p class="empty">${t('common.empty')}</p>`);
 }

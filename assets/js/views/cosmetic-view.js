@@ -3,10 +3,9 @@
 import { html, raw, mount, toast, openDialog, setTitle, $ } from '../ui.js';
 import { t, ARMOR_KINDS } from '../i18n.js';
 import { icon } from '../icons.js';
-import { owned } from '../store.js';
 import { mountHunter } from '../hunter3d.js';
 import { rarity, hrBadge, rankBadge, slotLabel } from '../components.js';
-import { getBuild, likeBuild, deleteBuild, hasCommunity } from '../api.js';
+import { getBuild, likeBuild, deleteBuild, hasCommunity, canEdit } from '../api.js';
 import { encodeBuild } from '../codec.js';
 import { lookInfo, lookAlt } from './cosmetic.js';
 import { cardActions, bindCardActions } from './shared.js';
@@ -22,7 +21,7 @@ export async function render(el, { data, params }) {
   }
   setTitle(entry.name);
   const info = lookInfo(entry.build, data);
-  const mine = owned.token(id);
+  const mine = await canEdit(id);
   const copyHref = `#/cosmetic/edit?b=${encodeURIComponent(encodeBuild(entry.build, { name: entry.name }))}`;
   const colors = entry.build.colors || {};
 

@@ -3,14 +3,13 @@
 import { html, raw, mount, toast, setTitle, $ } from '../ui.js';
 import { t, getLang, ARMOR_KINDS } from '../i18n.js';
 import { icon } from '../icons.js';
-import { owned } from '../store.js';
 import { loadLooks } from '../data.js';
 import { resolve } from '../calc.js';
 import { lookFor } from '../look.js';
 import { mountHunter } from '../hunter3d.js';
 import { hrBadge, rankBadge, hunter2d } from '../components.js';
 import { listBuilds, likeBuild, hasCommunity } from '../api.js';
-import { cardActions, bindCardActions } from './shared.js';
+import { cardActions, bindCardActions, isOwn } from './shared.js';
 import { encodeBuild } from '../codec.js';
 
 /** Summary of a look: resolved gear, HR and rank needed to unlock it. */
@@ -102,7 +101,7 @@ export async function render(el, { data }) {
         mount(com, html`<div class="grid grid-cards">${res.builds.map((b, i) => lookCard({
           id: b.id, name: b.name, desc: b.description, author: b.author || t('common.anonymous'), info: infos[i][1],
           footer: html`<p class="card-meta"><button type="button" class="btn btn-sm${b.liked ? ' is-on' : ''}" data-like="${b.id}" aria-pressed="${b.liked}">${raw(icon('heart', { size: 16 }))}<span>${t('discover.likes', { n: b.likes })}</span></button>
-            ${owned.token(b.id) ? html`<span class="badge badge-variant">${t('discover.yours')}</span>` : ''}</p>`,
+            ${isOwn(b) ? html`<span class="badge badge-variant">${t('discover.yours')}</span>` : ''}</p>`,
           actions: html`<a class="btn btn-sm" href="#/cosmetic/${b.id}">${raw(icon('eye', { size: 16 }))}${t('card.view')}</a>
             ${cardActions({ build: b.build, name: b.name, communityId: b.id, type: 'cosmetic' }, { view: false, edit: false })}`
         }))}</div>`);

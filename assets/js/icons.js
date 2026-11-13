@@ -45,6 +45,7 @@ const P = {
   crown: '<path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/>',
   paw: '<circle cx="7" cy="9" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="17" cy="9" r="2"/><path d="M8 17c0-3 2-5 4-5s4 2 4 5-2 3-4 3-4 0-4-3z"/>',
   list: '<path d="M9 6h11M9 12h11M9 18h11M4 6h1M4 12h1M4 18h1"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
   shield: '<path d="M12 3l8 3v6c0 5-4 8-8 9-4-1-8-4-8-9V6z"/>',
   sword: '<path d="M19 3l2 2-12 12-3-1-1-3zM5 17l-2 4 4-2"/>'
 };

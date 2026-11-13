@@ -9,6 +9,7 @@ import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
 import { loadData } from './data.js';
 import { computeBuild, sanitize } from './calc.js';
 import { getLang } from './i18n.js';
+import { accessToken } from './auth.js';
 
 const meta = document.querySelector('meta[name="mhb-api"]');
 const NODE_BASE = meta ? meta.content : '';
@@ -33,12 +34,15 @@ async function nodeRequest(path, { method = 'GET', body, token } = {}) {
 
 // ---------------------------------------------------------------- Supabase (PostgREST, no SDK)
 async function supa(path, { method = 'GET', body, headers = {} } = {}) {
+  // Signed-in visitors send their session token; legacy anon keys (JWTs) go in Authorization
+  // too, while new publishable keys must not.
+  const userToken = await accessToken();
+  const bearer = userToken || (SUPABASE_ANON_KEY.startsWith('eyJ') ? SUPABASE_ANON_KEY : null);
   const res = await fetch(`${SUPA}/rest/v1/${path}`, {
     method,
     headers: {
       apikey: SUPABASE_ANON_KEY,
-      // Legacy anon keys are JWTs and go in Authorization too; new publishable keys must not.
-      ...(SUPABASE_ANON_KEY.startsWith('eyJ') ? { Authorization: `Bearer ${SUPABASE_ANON_KEY}` } : {}),
+      ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
       ...(body ? { 'Content-Type': 'application/json' } : {}),
       ...headers
     },
@@ -137,3 +141,49 @@ export async function deleteBuild(id) {
 export const likeBuild = id => (SUPA
   ? rpc('toggle_like', { p_id: id, p_voter: voterId() })
   : nodeRequest(`builds/${encodeURIComponent(id)}/like`, { method: 'POST' }));
+
+// ---------------------------------------------------------------- Accounts (Supabase only)
+export const accountsEnabled = () => !!SUPA;
+
+export async function myBuilds() {
+  if (!SUPA) return [];
+  const rows = await rpc('my_builds', {});
+  const liked = await likedSet((rows || []).map(r => r.id));
+  return (rows || []).map(r => fromRow(r, liked.has(r.id)));
+}
+
+/** True when the build was published from this browser or belongs to the signed-in account. */
+export async function canEdit(id) {
+  if (owned.token(id)) return true;
+  if (!SUPA) return false;
+  try { return !!(await rpc('owns_build', { p_id: id })); } catch { return false; }
+}
+
+/** Attaches builds published anonymously from this browser to the signed-in account. */
+export async function claimOwnedBuilds() {
+  const all = owned.all();
+  const ids = Object.keys(all);
+  if (!SUPA || !ids.length) return 0;
+  return rpc('claim_builds', { p_ids: ids, p_tokens: ids.map(id => all[id]) });
+}
+
+export const usernameAvailable = name => rpc('username_available', { p_username: name });
+export const updateUsername = name => rpc('update_username', { p_username: name });
+export const deleteMyAccount = () => rpc('delete_my_account', {});
+
+export const cloudFavorites = {
+  async list() {
+    const { data } = await supa('favorites?select=fav_id,entry,saved_at&order=saved_at.desc');
+    return (data || []).map(r => ({ ...r.entry, id: r.fav_id, savedAt: Date.parse(r.saved_at) }));
+  },
+  async save(entry) {
+    await supa('favorites?on_conflict=user_id,fav_id', {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: [{ fav_id: entry.id, entry, saved_at: new Date(entry.savedAt || Date.now()).toISOString() }]
+    });
+  },
+  async remove(id) {
+    await supa(`favorites?fav_id=eq.${encodeURIComponent(id)}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+  }
+};

@@ -19,16 +19,23 @@ export const prefs = {
   set: (key, value) => write(`pref:${key}`, value)
 };
 
-/** Favorites: full snapshots so they work offline and on static hosting. */
+/** Favorites: full snapshots so they work offline; synced with the account when signed in. */
+const favListeners = new Set();
+const notify = (type, value) => favListeners.forEach(fn => { try { fn(type, value); } catch { /* ignore */ } });
 export const favorites = {
   all: () => read('favorites', []),
   has: id => favorites.all().some(f => f.id === id),
   add(entry) {
     const list = favorites.all().filter(f => f.id !== entry.id);
-    list.unshift({ ...entry, savedAt: Date.now() });
+    const saved = { ...entry, savedAt: Date.now() };
+    list.unshift(saved);
     write('favorites', list.slice(0, 200));
+    notify('add', saved);
   },
-  remove(id) { write('favorites', favorites.all().filter(f => f.id !== id)); },
+  remove(id) { write('favorites', favorites.all().filter(f => f.id !== id)); notify('remove', id); },
+  /** Replaces the local list without notifying (used by the account sync). */
+  replaceAll(list) { write('favorites', list.slice(0, 200)); },
+  onChange(fn) { favListeners.add(fn); return () => favListeners.delete(fn); },
   toggle(entry) {
     if (favorites.has(entry.id)) { favorites.remove(entry.id); return false; }
     favorites.add(entry); return true;
