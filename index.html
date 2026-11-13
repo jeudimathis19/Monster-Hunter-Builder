@@ -1,143 +1,82 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Monster Hunter Wilds - Hunter Builder</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wilds Forge · Monster Hunter Wilds Builder</title>
+  <meta name="description" content="Créateur de builds pour Monster Hunter Wilds : toutes les armes, armures, joyaux, talismans et matériaux, builds par style de jeu, coûts, rang de chasseur requis, rendu 3D et builds de la communauté.">
+  <meta name="theme-color" content="#14110d" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f3ead9" media="(prefers-color-scheme: light)">
+  <meta name="color-scheme" content="dark light">
+  <meta name="mhb-api" content="">
+  <meta property="og:title" content="Wilds Forge · Monster Hunter Wilds Builder">
+  <meta property="og:description" content="Builds, équipements et tenues pour Monster Hunter Wilds.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preload" href="data/fr.json" as="fetch" crossorigin="anonymous" id="preload-data">
+  <link rel="stylesheet" href="assets/css/app.css">
+  <script src="assets/js/boot.js"></script>
+  <script type="module" src="assets/js/app.js"></script>
 </head>
 <body>
-  <header class="mh-header">
-    <div class="header-content">
-      <div class="logo">
-        <img src="https://www.monsterhunter.com/wilds/common/img/logo/mhws_logo.png" alt="Monster Hunter Wilds" onerror="this.style.display='none'">
-        <h1>Monster Hunter Wilds</h1>
-      </div>
-      <nav class="main-nav">
-        <a href="https://www.monsterhunter.com/wilds/fr/" target="_blank">Site officiel</a>
-        <a href="#" class="active">Builder</a>
+  <a class="skip-link" href="#main" data-i18n="skip">Aller au contenu</a>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#/" aria-label="Wilds Forge">
+        <svg class="brand-mark" width="40" height="40" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+          <defs><linearGradient id="bm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0c060"/><stop offset="1" stop-color="#c8442b"/></linearGradient></defs>
+          <path d="M24 3l6 9 11 2-7 9 2 12-12-5-12 5 2-12-7-9 11-2z" fill="none" stroke="url(#bm)" stroke-width="2.5" stroke-linejoin="round"/>
+          <path d="M24 12v24M17 20l7 6 7-6" fill="none" stroke="url(#bm)" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+        <span class="brand-text"><span class="brand-name">Wilds Forge</span><span class="brand-sub">Monster Hunter Wilds Builder</span></span>
+      </a>
+
+      <button class="btn btn-icon nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav">
+        <svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        <span class="sr-only" data-i18n="nav.menu">Menu</span>
+      </button>
+
+      <nav id="main-nav" class="main-nav" aria-label="Navigation principale" data-i18n-aria="nav.main">
+        <ul>
+          <li><a href="#/" data-route="home" data-i18n="nav.home">Accueil</a></li>
+          <li><a href="#/builder" data-route="builder" data-i18n="nav.builder">Créateur</a></li>
+          <li><a href="#/discover" data-route="discover" data-i18n="nav.discover">Découverte</a></li>
+          <li><a href="#/cosmetic" data-route="cosmetic" data-i18n="nav.cosmetic">Cosmétique</a></li>
+          <li><a href="#/db/weapons" data-route="db" data-i18n="nav.database">Encyclopédie</a></li>
+          <li><a href="#/favorites" data-route="favorites" data-i18n="nav.favorites">Mes builds</a></li>
+        </ul>
       </nav>
+
+      <div class="header-tools">
+        <button class="btn btn-ghost btn-sm lang-toggle" type="button" lang="en" aria-label="Switch to English">EN</button>
+        <button class="btn btn-icon theme-toggle" type="button" aria-label="Changer de thème" aria-pressed="false">
+          <svg class="icon icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+          <svg class="icon icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M20 14A8 8 0 1 1 10 4a7 7 0 0 0 10 10z"/></svg>
+        </button>
+      </div>
     </div>
   </header>
 
-  <main class="hero-section">
-    <div class="hero-overlay"></div>
-    <div class="hero-content">
-      <h2 class="hero-title">Monster Hunter Builder</h2>
-      <p class="hero-subtitle">Configurez votre style de jeu et créez le build parfait pour vous</p>
-    </div>
+  <main id="main" class="site-main" tabindex="-1">
+    <section class="hero">
+      <div class="container hero-inner">
+        <h1 class="hero-title" data-i18n="home.title">Forgez le chasseur qui vous ressemble</h1>
+        <p class="hero-lead" data-i18n="home.lead">Toutes les armes, armures, joyaux et talismans de Monster Hunter Wilds. Générez un build selon votre style, créez le vôtre et découvrez ceux de la communauté.</p>
+      </div>
+    </section>
   </main>
 
-  <section class="builder-section">
-    <div class="container">
-      <div class="builder-layout">
-        <!-- Form Side -->
-        <div class="form-card">
-          <h3 class="form-title">Vos Préférences</h3>
-          <form id="builderForm" class="hunter-form">
-            <div class="form-group">
-              <label for="level">Niveau du Chasseur <span class="required">*</span></label>
-              <input type="number" id="level" name="level" min="1" max="999" placeholder="Entrez votre niveau" required>
-            </div>
-
-            <div class="form-group">
-              <label for="weapon">Arme Principale <span class="required">*</span></label>
-              <select id="weapon" name="weapon" required>
-                <option value="">Sélectionnez votre arme</option>
-                <option value="Great Sword">Great Sword - Grande Épée</option>
-                <option value="Long Sword">Long Sword - Épée Longue</option>
-                <option value="Sword & Shield">Sword & Shield - Épée et Bouclier</option>
-                <option value="Dual Blades">Dual Blades - Lames Doubles</option>
-                <option value="Hammer">Hammer - Marteau</option>
-                <option value="Hunting Horn">Hunting Horn - Cor de Chasse</option>
-                <option value="Lance">Lance</option>
-                <option value="Gunlance">Gunlance - Lancecanon</option>
-                <option value="Switch Axe">Switch Axe - Morpho Hache</option>
-                <option value="Charge Blade">Charge Blade - Volto Hache</option>
-                <option value="Insect Glaive">Insect Glaive - Insectoglaive</option>
-                <option value="Bow">Bow - Arc</option>
-                <option value="Heavy Bowgun">Heavy Bowgun - Fusarbalète Lourde</option>
-                <option value="Light Bowgun">Light Bowgun - Fusarbalète Légère</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="playstyle">Style de Jeu</label>
-              <select id="playstyle" name="playstyle">
-                <option value="">Sélectionnez votre style (optionnel)</option>
-                <option value="Agression">Agression - Attaque aggressive</option>
-                <option value="Defensif">Défensif - Joueur défensif</option>
-                <option value="Technique">Technique - Combat technique</option>
-                <option value="Support">Support - Aide à l'équipe</option>
-                <option value="Equilibre">Équilibré - Polyvalent</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="element">Élément Préféré</label>
-              <select id="element" name="element">
-                <option value="">Aucun préférence</option>
-                <option value="Fire">Feu</option>
-                <option value="Water">Eau</option>
-                <option value="Thunder">Foudre</option>
-                <option value="Ice">Glace</option>
-                <option value="Dragon">Dragon</option>
-                <option value="Poison">Poison</option>
-                <option value="Paralysis">Paralysie</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="priority">Priorité Principale</label>
-              <select id="priority" name="priority">
-                <option value="damage">Dégâts</option>
-                <option value="survivability">Survie</option>
-                <option value="utility">Utilité</option>
-                <option value="status">Statut</option>
-              </select>
-            </div>
-
-            <button type="submit" class="submit-btn">
-              <span class="btn-text">GÉNÉRER MON BUILD</span>
-              <span class="btn-icon">⚔️</span>
-            </button>
-          </form>
-        </div>
-
-        <!-- Results Side -->
-        <div class="results-card">
-          <h3 class="form-title">Builds Générés</h3>
-          <div id="buildsList" class="builds-list">
-            <div class="empty-state">
-              <p>Configurez vos préférences et générez votre build idéal</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="favorites-section">
-    <div class="container">
-      <h3 class="section-title">Mes Favoris</h3>
-      <div id="favoritesList" class="hunters-grid">
-        <div class="empty-state">
-          <p>Aucun favori enregistré</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <footer class="mh-footer">
-    <div class="footer-content">
-      <p>&copy; 2025-2026 Capcom. Monster Hunter Wilds est une marque déposée de Capcom Co., Ltd.</p>
-      <p>Ce site est un fan-made et n'est pas affilié à Capcom.</p>
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p data-i18n="footer.fan">Site de fans non officiel, sans lien avec Capcom. Monster Hunter Wilds est une marque de Capcom Co., Ltd.</p>
+      <p data-i18n="footer.data">Données de jeu : base communautaire MHDB (données du jeu et du wiki). Builds recommandés inspirés de Game8 et mhwildsbuild.com.</p>
+      <p data-i18n="footer.hr">Le rang de chasseur indiqué est une estimation basée sur la rareté et les monstres à chasser.</p>
     </div>
   </footer>
 
-  <script src="script.js"></script>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <noscript><p class="noscript">Wilds Forge nécessite JavaScript. / Wilds Forge requires JavaScript.</p></noscript>
 </body>
 </html>

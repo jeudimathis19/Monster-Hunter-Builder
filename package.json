@@ -5,9 +5,11 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "dev": "node --watch server.js --dev",
     "seed": "node scripts/seed.js",
     "export": "node scripts/export.js",
-    "data": "npm run seed && npm run export"
+    "featured": "node scripts/featured.js",
+    "data": "npm run seed && npm run export && npm run featured"
   },
   "repository": {
     "type": "git",

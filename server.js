@@ -9,7 +9,7 @@ const { createCommunity, ValidationError, PLAYSTYLES } = require('./lib/communit
 const { staticFiles, compressEntry, send } = require('./lib/static');
 
 const PORT = Number(process.env.PORT) || 3000;
-const DEV = process.env.NODE_ENV === 'development';
+const DEV = process.env.NODE_ENV === 'development' || process.argv.includes('--dev');
 const ROOT = __dirname;
 
 // ---- Database ----------------------------------------------------------
@@ -171,6 +171,20 @@ api.use((req, res) => res.status(404).json({ error: 'Not found' }));
 app.use('/api', api);
 
 // ---- Front-end ---------------------------------------------------------
+// index.html is shared with the static (GitHub Pages) version: the server enables
+// community features by filling the API meta tag.
+const fs = require('fs');
+let indexEntry = null;
+const indexHandler = (req, res) => {
+  if (!indexEntry || DEV) {
+    const htmlSrc = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8')
+      .replace('<meta name="mhb-api" content="">', '<meta name="mhb-api" content="api/">');
+    indexEntry = compressEntry(Buffer.from(htmlSrc), '.html');
+  }
+  send(req, res, indexEntry, 'no-cache');
+};
+app.get(['/', '/index.html'], indexHandler);
+
 app.use(staticFiles(ROOT, {
   files: ['index.html', 'manifest.webmanifest', 'robots.txt', 'favicon.svg'],
   dirs: ['assets', 'data'],

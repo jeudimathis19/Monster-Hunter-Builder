@@ -1,0 +1,13 @@
+{
+  "name": "Wilds Forge · Monster Hunter Wilds Builder",
+  "short_name": "Wilds Forge",
+  "description": "Monster Hunter Wilds build planner: gear database, playstyle builds, custom builds and community discovery.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#12100d",
+  "theme_color": "#14110d",
+  "icons": [
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
