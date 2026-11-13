@@ -11,7 +11,7 @@ without any server.
    and click **Run**.
 3. Open **Project Settings > API** (or **Data API**) and copy:
    - the **Project URL** (`https://xxxx.supabase.co`),
-   - the **anon public** key.
+   - the **publishable** key (`sb_publishable_...`) or, on older projects, the **anon public** key.
 4. Put both values in [assets/js/config.js](../assets/js/config.js) and push.
 
 The anon key is meant to be public: visitors can only read the `builds_public` view. Publishing, editing,

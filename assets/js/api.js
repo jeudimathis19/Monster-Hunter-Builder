@@ -37,7 +37,8 @@ async function supa(path, { method = 'GET', body, headers = {} } = {}) {
     method,
     headers: {
       apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      // Legacy anon keys are JWTs and go in Authorization too; new publishable keys must not.
+      ...(SUPABASE_ANON_KEY.startsWith('eyJ') ? { Authorization: `Bearer ${SUPABASE_ANON_KEY}` } : {}),
       ...(body ? { 'Content-Type': 'application/json' } : {}),
       ...headers
     },

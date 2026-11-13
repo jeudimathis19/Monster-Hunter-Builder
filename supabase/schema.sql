@@ -5,7 +5,7 @@
 -- Every write goes through the functions below, which validate the input and
 -- check the secret edit token returned at publication (stored hashed).
 
-create extension if not exists pgcrypto;
+create extension if not exists pgcrypto with schema extensions;
 
 -- ---------------------------------------------------------------- Tables
 create table if not exists public.builds (
@@ -64,7 +64,7 @@ revoke all on public.publish_log from anon, authenticated;
 
 -- ---------------------------------------------------------------- Write functions
 create or replace function public.publish_build(p jsonb, p_voter text)
-returns jsonb language plpgsql security definer set search_path = public as $$
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_token text := encode(gen_random_bytes(24), 'hex');
   v_id text;
@@ -91,7 +91,7 @@ begin
 end $$;
 
 create or replace function public.update_build(p_id text, p_token text, p jsonb)
-returns jsonb language plpgsql security definer set search_path = public as $$
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
 begin
   if _clean(p->>'name', 60) is null then raise exception 'A build name is required'; end if;
   update builds set
@@ -107,7 +107,7 @@ begin
 end $$;
 
 create or replace function public.delete_build(p_id text, p_token text)
-returns jsonb language plpgsql security definer set search_path = public as $$
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
 begin
   delete from builds where id = p_id and token_hash = encode(digest(coalesce(p_token, ''), 'sha256'), 'hex');
   if not found then raise exception 'Forbidden'; end if;
@@ -115,7 +115,7 @@ begin
 end $$;
 
 create or replace function public.toggle_like(p_id text, p_voter text)
-returns jsonb language plpgsql security definer set search_path = public as $$
+returns jsonb language plpgsql security definer set search_path = public, extensions as $$
 declare v_liked boolean; v_likes int;
 begin
   if p_voter !~ '^[A-Za-z0-9_-]{8,64}$' then raise exception 'Invalid voter id'; end if;
@@ -131,12 +131,12 @@ begin
 end $$;
 
 create or replace function public.view_build(p_id text)
-returns void language sql security definer set search_path = public as $$
+returns void language sql security definer set search_path = public, extensions as $$
   update builds set views = views + 1 where id = p_id
 $$;
 
 create or replace function public.liked_ids(p_voter text, p_ids text[])
-returns text[] language sql stable security definer set search_path = public as $$
+returns text[] language sql stable security definer set search_path = public, extensions as $$
   select coalesce(array_agg(build_id), '{}') from build_likes where voter = p_voter and build_id = any(p_ids)
 $$;
 
