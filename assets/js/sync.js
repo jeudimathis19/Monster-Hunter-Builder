@@ -35,7 +35,9 @@ export function startSync() {
   onAuthChange(() => {
     const now = isSignedIn();
     if (now && !wasSignedIn) syncAccount();
+    if (!now && wasSignedIn) favorites.replaceAll([]); // favorites belong to the account
     wasSignedIn = now;
   });
   if (wasSignedIn) syncAccount();
+  else favorites.replaceAll([]); // favorites need an account
 }

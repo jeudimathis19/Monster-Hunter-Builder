@@ -152,10 +152,9 @@ export async function myBuilds() {
   return (rows || []).map(r => fromRow(r, liked.has(r.id)));
 }
 
-/** True when the build was published from this browser or belongs to the signed-in account. */
+/** True when the build belongs to the signed-in account. */
 export async function canEdit(id) {
-  if (owned.token(id)) return true;
-  if (!SUPA) return false;
+  if (!SUPA || !(await accessToken())) return false;
   try { return !!(await rpc('owns_build', { p_id: id })); } catch { return false; }
 }
 

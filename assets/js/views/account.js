@@ -29,7 +29,11 @@ export async function render(el, { query, rerender }) {
     return;
   }
 
-  const notice = query.get('error') ? html`<p class="alert" role="alert">${errorText(new AuthError(query.get('error')))}</p>` : '';
+  const notice = query.get('error') ? html`<p class="alert" role="alert">${errorText(new AuthError(query.get('error')))}</p>`
+    : /^acc\.need\.\w+$/.test(query.get('why') || '') ? html`<p class="alert alert-info" role="status">${t(query.get('why'))}</p>` : '';
+  // Where to go back after signing in (only routes of this site).
+  const next = /^\/[\w/?=&%.-]*$/.test(query.get('next') || '') ? query.get('next') : null;
+  const done = () => { if (next) location.hash = `#${next}`; else rerender(); };
 
   // ---------------------------------------------------------------- Signed out
   if (!isSignedIn()) {
@@ -85,7 +89,7 @@ export async function render(el, { query, rerender }) {
           await signIn(String(f.get('email')).trim(), String(f.get('password')));
           await syncAccount();
           toast(t('acc.welcome', { name: currentUser().username }), 'success');
-          rerender();
+          done();
         } else if (form.dataset.mode === 'signup') {
           const username = String(f.get('username')).trim();
           if (!USERNAME.test(username)) { fail(t('acc.usernameHint')); return; }
@@ -94,7 +98,7 @@ export async function render(el, { query, rerender }) {
           if (res.confirmed) {
             await syncAccount();
             toast(t('acc.welcome', { name: currentUser().username }), 'success');
-            rerender();
+            done();
           } else {
             mount(form, html`<p class="alert alert-info" role="status">${t('acc.confirmSent')}</p>`);
           }

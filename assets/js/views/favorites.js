@@ -15,6 +15,19 @@ import { hunter2d } from '../components.js';
 
 export async function render(el, { data }) {
   setTitle(t('fav.title'));
+  // Favorites and creations live on the account.
+  if (accountsEnabled() && !isSignedIn()) {
+    mount(el, html`
+      <div class="page-hero"><div class="container"><h1>${t('fav.title')}</h1><p>${t('fav.lead')}</p></div></div>
+      <div class="container page"><div class="account-box panel">
+        <p>${t('acc.need.favorites')}</p>
+        <p class="builder-actions">
+          <a class="btn btn-primary" href="#/account?next=%2Ffavorites">${t('acc.signin')}</a>
+          <a class="btn" href="#/account?mode=signup&next=%2Ffavorites">${t('acc.signup')}</a>
+        </p>
+      </div></div>`);
+    return;
+  }
   mount(el, html`
     <div class="page-hero"><div class="container">
       <h1>${t('fav.title')}</h1><p>${t('fav.lead')}</p>

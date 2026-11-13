@@ -14,7 +14,7 @@ import {
 } from '../components.js';
 import { pickGear, pickerTitle } from './picker.js';
 import { publishDialog } from './publish.js';
-import { shareUrl } from './shared.js';
+import { shareUrl, requireSignIn } from './shared.js';
 import { getBuild } from '../api.js';
 
 export async function render(el, { data, query }) {
@@ -173,6 +173,7 @@ export async function render(el, { data, query }) {
     const label = state.name || t('builder.namePh');
     if (name === 'share') { if (await copyText(shareUrl(state.build, state.name))) toast(t('common.copied'), 'success'); }
     if (name === 'fav') {
+      if (!requireSignIn('acc.need.fav')) return;
       favorites.add({ id: buildKey(state.build), name: label, build: state.build, kind: state.kind, style: 'custom', type: 'build' });
       toast(t('card.favAdded'), 'success');
     }

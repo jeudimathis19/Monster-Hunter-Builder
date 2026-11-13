@@ -5,6 +5,7 @@ import { t, getLang, STYLES } from '../i18n.js';
 import { icon } from '../icons.js';
 import { hasCommunity, publishBuild, updateBuild, canEdit } from '../api.js';
 import { currentUser } from '../auth.js';
+import { requireSignIn } from './shared.js';
 
 /**
  * @param {object} opts { type: 'build'|'cosmetic', build, name, style, editId, existing }
@@ -13,6 +14,12 @@ import { currentUser } from '../auth.js';
 export async function publishDialog({ type = 'build', build, name = '', style = 'custom', editId = null, existing = {} }) {
   if (!hasCommunity()) {
     toast(t('publish.offline'), 'error');
+    return null;
+  }
+  // Publishing and editing are for signed-in authors only.
+  if (!requireSignIn(editId ? 'acc.need.edit' : 'acc.need.publish')) return null;
+  if (editId && !(await canEdit(editId))) {
+    toast(t('acc.need.owner'), 'error');
     return null;
   }
   const isEdit = editId && await canEdit(editId);

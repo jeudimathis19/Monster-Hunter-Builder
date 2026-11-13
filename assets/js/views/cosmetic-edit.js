@@ -12,6 +12,7 @@ import { rarity, hrBadge, rankBadge, slotLabel, materialsBlock, bindChecklist } 
 import { getBuild } from '../api.js';
 import { pickGear, pickerTitle } from './picker.js';
 import { publishDialog } from './publish.js';
+import { requireSignIn } from './shared.js';
 import { lookInfo, lookAlt } from './cosmetic.js';
 import { encodeBuild } from '../codec.js';
 
@@ -182,6 +183,7 @@ export async function render(el, { data, query }) {
         if (await copyText(url)) toast(t('common.copied'), 'success');
       }
       if (name === 'fav') {
+        if (!requireSignIn('acc.need.fav')) return;
         favorites.add({ id: `look:${encodeBuild(state.look)}`, name: label, build: state.look, type: 'cosmetic', style: 'custom' });
         toast(t('card.favAdded'), 'success');
       }

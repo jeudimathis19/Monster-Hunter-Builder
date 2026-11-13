@@ -2,8 +2,8 @@
 -- Run this whole file once in Supabase > SQL Editor > New query.
 --
 -- Visitors (anon key) can only READ through the `builds_public` view.
--- Every write goes through the functions below, which validate the input and
--- check the secret edit token returned at publication (stored hashed).
+-- Every write goes through the functions below, which validate the input.
+-- Publishing needs an account; only the signed-in author can edit or delete a build.
 
 create extension if not exists pgcrypto with schema extensions;
 
@@ -87,6 +87,7 @@ declare
   v_token text := encode(gen_random_bytes(24), 'hex');
   v_id text;
 begin
+  if auth.uid() is null then raise exception 'Sign in required'; end if;
   if p_voter !~ '^[A-Za-z0-9_-]{8,64}$' then raise exception 'Invalid voter id'; end if;
   if (select count(*) from publish_log where voter = p_voter and at > now() - interval '1 hour') >= 20 then
     raise exception 'Too many publications, try again later';
@@ -124,8 +125,7 @@ begin
     rank = case when p->>'rank' = 'high' then 'high' else 'low' end,
     lang = case when p->>'lang' = 'en' then 'en' else 'fr' end,
     data = p->'build', updated_at = now()
-  where id = p_id and (token_hash = encode(digest(coalesce(p_token, ''), 'sha256'), 'hex')
-                       or (auth.uid() is not null and user_id = auth.uid()));
+  where id = p_id and auth.uid() is not null and user_id = auth.uid();
   if not found then raise exception 'Forbidden'; end if;
   return jsonb_build_object('id', p_id);
 end $$;
@@ -133,8 +133,7 @@ end $$;
 create or replace function public.delete_build(p_id text, p_token text)
 returns jsonb language plpgsql security definer set search_path = public, extensions as $$
 begin
-  delete from builds where id = p_id and (token_hash = encode(digest(coalesce(p_token, ''), 'sha256'), 'hex')
-                                          or (auth.uid() is not null and user_id = auth.uid()));
+  delete from builds where id = p_id and auth.uid() is not null and user_id = auth.uid();
   if not found then raise exception 'Forbidden'; end if;
   return jsonb_build_object('ok', true);
 end $$;
@@ -168,9 +167,12 @@ $$;
 revoke all on function public.publish_build(jsonb, text), public.update_build(text, text, jsonb),
   public.delete_build(text, text), public.toggle_like(text, text), public.view_build(text),
   public.liked_ids(text, text[]), public._clean(text, int) from public;
-grant execute on function public.publish_build(jsonb, text), public.update_build(text, text, jsonb),
-  public.delete_build(text, text), public.toggle_like(text, text), public.view_build(text),
+grant execute on function public.toggle_like(text, text), public.view_build(text),
   public.liked_ids(text, text[]) to anon, authenticated;
+revoke execute on function public.publish_build(jsonb, text), public.update_build(text, text, jsonb),
+  public.delete_build(text, text) from anon;
+grant execute on function public.publish_build(jsonb, text), public.update_build(text, text, jsonb),
+  public.delete_build(text, text) to authenticated;
 
 -- ================================================================ Accounts
 -- Visitors can create an account (Supabase Auth, email + password). Each account

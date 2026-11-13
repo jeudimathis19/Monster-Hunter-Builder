@@ -3,15 +3,27 @@
 import { html, raw, toast, copyText } from '../ui.js';
 import { t } from '../i18n.js';
 import { icon } from '../icons.js';
-import { favorites, owned } from '../store.js';
+import { favorites } from '../store.js';
 import { encodeBuild } from '../codec.js';
 import { buildKey } from '../calc.js';
-import { currentUser } from '../auth.js';
+import { currentUser, isSignedIn, authEnabled } from '../auth.js';
 
-/** True when a listed build was published from this browser or by the signed-in account. */
+/** True when a listed build was published by the signed-in account. */
 export function isOwn(b) {
   const user = currentUser();
-  return !!(owned.token(b.id) || (user && user.username && b.author === user.username));
+  return !!(user && user.username && b.author === user.username);
+}
+
+/**
+ * Favorites and publications need an account. Returns true when signed in;
+ * otherwise explains why and opens the account page, coming back here afterwards.
+ */
+export function requireSignIn(reasonKey) {
+  if (isSignedIn()) return true;
+  if (!authEnabled()) { toast(t('acc.disabled'), 'error'); return false; }
+  const next = location.hash.replace(/^#/, '') || '/';
+  location.hash = `#/account?why=${encodeURIComponent(reasonKey)}&next=${encodeURIComponent(next)}`;
+  return false;
 }
 
 const registry = new Map();
@@ -49,7 +61,7 @@ export function bindCardActions(root) {
     const share = e.target.closest('[data-share]');
     if (fav) {
       const entry = registry.get(fav.dataset.fav);
-      if (!entry) return;
+      if (!entry || !requireSignIn('acc.need.fav')) return;
       const on = favorites.toggle({
         id: entry.favId, name: entry.name, build: entry.build, style: entry.style || 'custom',
         kind: entry.kind || null, communityId: entry.communityId || null, type: entry.type || 'build'
