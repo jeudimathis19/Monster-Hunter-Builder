@@ -19,29 +19,20 @@
 - **3D render** of the hunter (WebGL, no library) shaped and colored by the armor families, plus a 2D view.
 - Favorites, share links, JSON export/import and build comparison.
 
-## Running
+## Using the site
 
-```bash
-npm install
-npm start          # http://localhost:3000
-```
+Everything runs in the browser at https://jeudimathis19.github.io/Monster-Hunter-Builder/ : nothing to install
+or launch. Community publishing (Discover and Cosmetics) uses an online Supabase database
+(see [supabase/README.md](supabase/README.md)).
 
-`npm run dev` restarts on changes and disables caching.
+## Data updates
 
-The site also works as a static site (GitHub Pages): everything except publishing to Discover, which needs the
-Node server. The server enables it automatically.
+Game data lives in `monster_hunter.db` (SQLite) and is exported to `data/*.json` for the site.
+A GitHub Action ([update-data.yml](.github/workflows/update-data.yml)) rebuilds it every Monday from the
+MHDB Wilds API and the community wiki, and commits it when something changed. It can also be started by hand
+from the repository's **Actions** tab (Update game data > Run workflow).
 
-## Data
-
-Game data lives in `monster_hunter.db` (SQLite) and is exported to `data/*.json` for the front-end.
-
-| Command | What it does |
-| --- | --- |
-| `npm run seed` | Rebuilds the game tables from the MHDB Wilds API (community builds are kept) |
-| `npm run gathering` | Refreshes gathering locales and other sources from the community wiki |
-| `npm run export` | Writes the FR/EN data bundles in `data/` |
-| `npm run featured` | Resolves recommended builds and outfit ideas |
-| `npm run data` | `seed` + `export` + `featured` |
+For development only: `npm install` then `npm run dev` serves the site locally; `npm run data` rebuilds the data.
 
 Hunter Rank requirements are estimates based on gear rarity and the monsters to hunt.
 

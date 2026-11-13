@@ -9,6 +9,14 @@ const { createCommunity, ValidationError, PLAYSTYLES } = require('./lib/communit
 const { staticFiles, compressEntry, send } = require('./lib/static');
 
 const PORT = Number(process.env.PORT) || 3000;
+// Online community database configured for the front-end (allowed in the CSP).
+const SUPABASE_ORIGIN = (() => {
+  try {
+    const src = require('fs').readFileSync(path.join(__dirname, 'assets', 'js', 'config.js'), 'utf8');
+    const m = src.match(/SUPABASE_URL\s*=\s*['"](https:\/\/[^'"/]+)/);
+    return m ? m[1] : '';
+  } catch { return ''; }
+})();
 const DEV = process.env.NODE_ENV === 'development' || process.argv.includes('--dev');
 const ROOT = __dirname;
 
@@ -46,7 +54,7 @@ app.use((req, res, next) => {
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
   res.setHeader('Content-Security-Policy',
     "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; " +
-    "connect-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'");
+    `connect-src 'self'${SUPABASE_ORIGIN ? ' ' + SUPABASE_ORIGIN : ''}; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'`);
   next();
 });
 
