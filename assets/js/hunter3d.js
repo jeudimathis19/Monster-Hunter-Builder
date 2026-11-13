@@ -1,9 +1,11 @@
-// Lightweight 3D hunter render built from CSS 3D cuboids (no WebGL, no library).
-// Each armor piece colors its body part; the weapon is carried on the back.
+// 3D hunter render: lit WebGL model (assets/js/gl) with a CSS 3D cuboid fallback.
+// Each armor piece shapes and colors its body part; the weapon is carried on the back.
 
 import { t } from './i18n.js';
 import { icon } from './icons.js';
 import { UNDERSUIT } from './look.js';
+import { supportsWebGL, Renderer } from './gl/renderer.js';
+import { buildModel } from './gl/model.js';
 
 const px = n => `${n}px`;
 
@@ -154,18 +156,31 @@ export function hunterModel(look) {
   return `<div class="h3d-shadow"></div>${out.join('')}`;
 }
 
+let glSupport = null;
+let shared = null; // shared offscreen renderer for compact (gallery) renders
+function canUseGL() {
+  if (glSupport === null) glSupport = supportsWebGL();
+  return glSupport;
+}
+function sharedRenderer() {
+  if (!shared) shared = new Renderer(document.createElement('canvas'));
+  return shared;
+}
+
 /**
  * Mounts an interactive render (drag, keyboard, buttons, slider).
- * Returns { update(look, label) }.
+ * Uses WebGL when available (smooth, lit model), CSS 3D cuboids otherwise.
+ * Returns { update(look, label), destroy() }.
  */
 export function mountHunter(container, look, { label = '', compact = false } = {}) {
   let angle = -28;
   let auto = false, raf = 0, last = 0;
   const id = `h3d-${Math.random().toString(36).slice(2, 8)}`;
+  const useGL = canUseGL();
   container.innerHTML = `
-    <div class="h3d${compact ? ' h3d-compact' : ''}">
+    <div class="h3d${compact ? ' h3d-compact' : ''}${useGL ? ' h3d-gl' : ''}">
       <div class="h3d-stage" tabindex="0" role="img" aria-label="" aria-describedby="${id}-help">
-        <div class="h3d-root"></div>
+        ${useGL ? '<canvas class="h3d-canvas"></canvas>' : '<div class="h3d-root"></div>'}
       </div>
       ${compact ? '' : `
       <div class="h3d-controls">
@@ -181,14 +196,42 @@ export function mountHunter(container, look, { label = '', compact = false } = {
       <p id="${id}-help" class="sr-only">${t('render.rotate')}: ← →</p>
     </div>`;
   const stage = container.querySelector('.h3d-stage');
-  const root = container.querySelector('.h3d-root');
   const range = container.querySelector('input[type=range]');
   const autoBtn = container.querySelector('[data-auto]');
+  const canvas = container.querySelector('canvas');
+  const root = container.querySelector('.h3d-root');
+
+  // WebGL: a dedicated context for the interactive view, a shared one for compact cards.
+  let renderer = null, ctx2d = null, parts = null, observer = null;
+  if (useGL) {
+    try {
+      if (compact) { renderer = sharedRenderer(); ctx2d = canvas.getContext('2d'); }
+      else renderer = new Renderer(canvas);
+    } catch { renderer = null; }
+  }
+  const draw = () => {
+    if (!renderer || !parts) return;
+    const w = stage.clientWidth || 300, h = stage.clientHeight || 300;
+    const rad = angle * Math.PI / 180;
+    if (compact) {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      renderer.resize(w, h);
+      renderer.setParts(parts);
+      renderer.render(rad, { zoom: 1.05 });
+      ctx2d.clearRect(0, 0, canvas.width, canvas.height);
+      ctx2d.drawImage(renderer.canvas, 0, 0, canvas.width, canvas.height);
+    } else {
+      renderer.resize(w, h);
+      renderer.render(rad);
+    }
+  };
 
   const apply = () => {
     const a = ((angle + 180) % 360 + 360) % 360 - 180;
-    root.style.setProperty('--turn', `${a}deg`);
+    if (root) root.style.setProperty('--turn', `${a}deg`);
     if (range) range.value = Math.round(a);
+    draw();
   };
   const setAuto = on => {
     auto = on;
@@ -223,12 +266,28 @@ export function mountHunter(container, look, { label = '', compact = false } = {
     if (e.target.closest('[data-auto]')) setAuto(!auto);
   });
   if (range) range.addEventListener('input', () => { setAuto(false); angle = +range.value; apply(); });
+  if (renderer && 'ResizeObserver' in window) {
+    observer = new ResizeObserver(() => draw());
+    observer.observe(stage);
+  }
 
   const update = (lk, lbl) => {
-    root.innerHTML = hunterModel(lk);
+    if (renderer) {
+      parts = buildModel(lk);
+      if (!compact) renderer.setParts(parts);
+    } else if (root) {
+      root.innerHTML = hunterModel(lk);
+    }
     stage.setAttribute('aria-label', lbl || label);
+    apply();
   };
   update(look, label);
-  apply();
-  return { update, destroy: () => cancelAnimationFrame(raf) };
+  return {
+    update,
+    destroy() {
+      cancelAnimationFrame(raf);
+      if (observer) observer.disconnect();
+      if (renderer && !compact) renderer.dispose();
+    }
+  };
 }

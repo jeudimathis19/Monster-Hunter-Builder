@@ -1,0 +1,138 @@
+// Procedural unit meshes (sphere, tapered tube, rounded box, cone, ring) with smooth normals.
+
+function finish(pos, nor, idx) {
+  return { pos: new Float32Array(pos), nor: new Float32Array(nor), idx: new Uint16Array(idx) };
+}
+
+/** Unit sphere (radius 1). Optional `squash` flattens the bottom half (domes). */
+export function sphere(lat = 18, lon = 24) {
+  const pos = [], nor = [], idx = [];
+  for (let i = 0; i <= lat; i++) {
+    const th = (i / lat) * Math.PI, st = Math.sin(th), ct = Math.cos(th);
+    for (let j = 0; j <= lon; j++) {
+      const ph = (j / lon) * Math.PI * 2;
+      const x = st * Math.cos(ph), y = ct, z = st * Math.sin(ph);
+      pos.push(x, y, z); nor.push(x, y, z);
+    }
+  }
+  for (let i = 0; i < lat; i++) {
+    for (let j = 0; j < lon; j++) {
+      const a = i * (lon + 1) + j, b = a + lon + 1;
+      idx.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  }
+  return finish(pos, nor, idx);
+}
+
+/** Half sphere (dome) opening downwards, y in [0,1]. */
+export function dome(lat = 10, lon = 24) {
+  const pos = [], nor = [], idx = [];
+  for (let i = 0; i <= lat; i++) {
+    const th = (i / lat) * Math.PI / 2, st = Math.sin(th), ct = Math.cos(th);
+    for (let j = 0; j <= lon; j++) {
+      const ph = (j / lon) * Math.PI * 2;
+      const x = st * Math.cos(ph), y = ct, z = st * Math.sin(ph);
+      pos.push(x, y, z); nor.push(x, y, z);
+    }
+  }
+  for (let i = 0; i < lat; i++) {
+    for (let j = 0; j < lon; j++) {
+      const a = i * (lon + 1) + j, b = a + lon + 1;
+      idx.push(a, b, a + 1, b, b + 1, a + 1);
+      idx.push(a, a + 1, b, b, a + 1, b + 1); // double-sided
+    }
+  }
+  return finish(pos, nor, idx);
+}
+
+/** Tube along Y from 0 to 1 with radius r0 at the bottom and r1 at the top, capped. */
+export function tube(r0 = 1, r1 = 1, seg = 20, rings = 4) {
+  const pos = [], nor = [], idx = [];
+  const slope = (r0 - r1);
+  for (let i = 0; i <= rings; i++) {
+    const t = i / rings, r = r0 + (r1 - r0) * t;
+    for (let j = 0; j <= seg; j++) {
+      const ph = (j / seg) * Math.PI * 2, c = Math.cos(ph), s = Math.sin(ph);
+      pos.push(r * c, t, r * s);
+      const n = [c, slope, s], l = Math.hypot(...n);
+      nor.push(n[0] / l, n[1] / l, n[2] / l);
+    }
+  }
+  for (let i = 0; i < rings; i++) {
+    for (let j = 0; j < seg; j++) {
+      const a = i * (seg + 1) + j, b = a + seg + 1;
+      idx.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  }
+  // caps
+  for (const [y, r, ny] of [[0, r0, -1], [1, r1, 1]]) {
+    const center = pos.length / 3;
+    pos.push(0, y, 0); nor.push(0, ny, 0);
+    for (let j = 0; j <= seg; j++) {
+      const ph = (j / seg) * Math.PI * 2;
+      pos.push(r * Math.cos(ph), y, r * Math.sin(ph)); nor.push(0, ny, 0);
+    }
+    for (let j = 0; j < seg; j++) {
+      if (ny < 0) idx.push(center, center + 1 + j, center + 2 + j);
+      else idx.push(center, center + 2 + j, center + 1 + j);
+    }
+  }
+  return finish(pos, nor, idx);
+}
+
+/** Rounded box: superellipsoid, size 2 (from -1 to 1), roundness e (0.1 = boxy, 1 = sphere). */
+export function roundBox(e = 0.25, lat = 16, lon = 24) {
+  const pos = [], nor = [], idx = [];
+  const sgn = v => (v < 0 ? -1 : 1);
+  const p = (v, k) => sgn(v) * Math.pow(Math.abs(v), k);
+  for (let i = 0; i <= lat; i++) {
+    const th = -Math.PI / 2 + (i / lat) * Math.PI;
+    for (let j = 0; j <= lon; j++) {
+      const ph = -Math.PI + (j / lon) * Math.PI * 2;
+      const ct = Math.cos(th), st = Math.sin(th), cp = Math.cos(ph), sp = Math.sin(ph);
+      const x = p(ct, e) * p(cp, e), y = p(st, e), z = p(ct, e) * p(sp, e);
+      pos.push(x, y, z);
+      const nx = p(ct, 2 - e) * p(cp, 2 - e), ny = p(st, 2 - e), nz = p(ct, 2 - e) * p(sp, 2 - e);
+      const l = Math.hypot(nx, ny, nz) || 1;
+      nor.push(nx / l, ny / l, nz / l);
+    }
+  }
+  for (let i = 0; i < lat; i++) {
+    for (let j = 0; j < lon; j++) {
+      const a = i * (lon + 1) + j, b = a + lon + 1;
+      idx.push(a, a + 1, b, b, a + 1, b + 1);
+    }
+  }
+  return finish(pos, nor, idx);
+}
+
+/** Torus ring in the XZ plane (major radius 1, minor radius r). */
+export function ring(r = 0.15, seg = 28, sides = 10) {
+  const pos = [], nor = [], idx = [];
+  for (let i = 0; i <= seg; i++) {
+    const u = (i / seg) * Math.PI * 2, cu = Math.cos(u), su = Math.sin(u);
+    for (let j = 0; j <= sides; j++) {
+      const v = (j / sides) * Math.PI * 2, cv = Math.cos(v), sv = Math.sin(v);
+      pos.push((1 + r * cv) * cu, r * sv, (1 + r * cv) * su);
+      nor.push(cv * cu, sv, cv * su);
+    }
+  }
+  for (let i = 0; i < seg; i++) {
+    for (let j = 0; j < sides; j++) {
+      const a = i * (sides + 1) + j, b = a + sides + 1;
+      idx.push(a, a + 1, b, b, a + 1, b + 1);
+    }
+  }
+  return finish(pos, nor, idx);
+}
+
+/** Flat disc (for the ground shadow), y = 0, radius 1. */
+export function disc(seg = 40) {
+  const pos = [0, 0, 0], nor = [0, 1, 0], idx = [];
+  for (let j = 0; j <= seg; j++) {
+    const ph = (j / seg) * Math.PI * 2;
+    pos.push(Math.cos(ph), 0, Math.sin(ph)); nor.push(0, 1, 0);
+  }
+  for (let j = 0; j < seg; j++) idx.push(0, j + 2, j + 1);
+  return finish(pos, nor, idx);
+}

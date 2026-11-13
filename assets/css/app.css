@@ -486,6 +486,9 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
   position: absolute; left: -60px; top: 50px; width: 120px; height: 60px; border-radius: 50%;
   background: radial-gradient(ellipse, rgba(0,0,0,.45), transparent 70%); transform: rotateX(90deg) translateZ(-22px);
 }
+.h3d-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.h3d-gl .h3d-stage { height: 440px; }
+.h3d-gl.h3d-compact .h3d-stage { height: 280px; }
 .h3d-controls { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; justify-content: center; }
 .h3d-range { flex: 1 1 140px; max-width: 220px; display: flex; align-items: center; }
 
