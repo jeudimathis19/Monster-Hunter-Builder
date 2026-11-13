@@ -34,8 +34,8 @@ function translateShell() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-aria]').forEach(el => el.setAttribute('aria-label', t(el.dataset.i18nAria)));
   const lang = document.querySelector('.lang-toggle');
-  lang.textContent = t('lang.short');
-  lang.setAttribute('aria-label', t('lang.switch'));
+  lang.querySelector('.lang-short').textContent = t('lang.short');
+  lang.querySelector('.lang-long').textContent = ` – ${t('lang.switch')}`;
   lang.setAttribute('lang', getLang() === 'fr' ? 'en' : 'fr');
   updateThemeButton();
 }

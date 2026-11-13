@@ -8,7 +8,7 @@ import { loadLooks } from '../data.js';
 import { resolve } from '../calc.js';
 import { lookFor } from '../look.js';
 import { mountHunter } from '../hunter3d.js';
-import { hrBadge, rankBadge } from '../components.js';
+import { hrBadge, rankBadge, hunter2d } from '../components.js';
 import { listBuilds, likeBuild, hasCommunity } from '../api.js';
 import { cardActions, bindCardActions } from './shared.js';
 import { encodeBuild } from '../codec.js';
@@ -27,7 +27,10 @@ export const lookAlt = info => t('render.alt', { list: info.pieces.map(p => p.n)
 function lookCard({ id, name, desc, author, info, actions, footer = '' }) {
   return html`<article class="card build-card look-card" data-look="${id}">
     <div class="build-card-body">
-      <div class="look-render" data-render="${id}"></div>
+      <div class="look-render" data-render="${id}">
+        <div class="look-2d">${hunter2d(info.look, { size: 150 })}</div>
+        <button type="button" class="btn btn-sm look-3d-btn" data-show3d="${id}">${t('cosmetic.view3d')}<span class="sr-only"> : ${name}</span></button>
+      </div>
       <header class="build-card-head">
         <h3 class="build-card-title">${name}</h3>
         ${author ? html`<p class="build-card-sub">${t('common.by', { name: author })}</p>` : ''}
@@ -44,6 +47,7 @@ function lookCard({ id, name, desc, author, info, actions, footer = '' }) {
 export async function render(el, { data }) {
   setTitle(t('cosmetic.title'));
   const lang = getLang();
+  const ideas = await loadLooks(); // loaded before the first paint of the view: no layout shift
   mount(el, html`
     <div class="page-hero"><div class="container view-head">
       <div><h1>${t('cosmetic.title')}</h1><p>${t('cosmetic.lead')}</p></div>
@@ -53,19 +57,24 @@ export async function render(el, { data }) {
       <section class="section" aria-labelledby="c-feat"><h2 id="c-feat" class="section-title">${t('cosmetic.featured')}</h2>
         <div class="grid grid-cards" id="c-ideas"></div></section>
       <section class="section" aria-labelledby="c-com"><h2 id="c-com" class="section-title">${t('cosmetic.gallery')}</h2>
-        <div id="c-community" aria-live="polite"></div></section>
+        <div id="c-community" aria-live="polite"><div class="skeleton"></div></div></section>
       <p class="small muted">${t('cosmetic.note')}</p>
     </div>`);
 
   const renders = [];
-  const mountRenders = (root, infos) => {
-    for (const [id, info] of infos) {
-      const slot = root.querySelector(`[data-render="${id}"]`);
-      if (slot) renders.push(mountHunter(slot, info.look, { compact: true, label: lookAlt(info) }));
-    }
-  };
+  // Cards show a light 2D silhouette; the 3D render is mounted on demand.
+  const lookInfos = new Map();
+  const mountRenders = (root, infos) => { for (const [id, info] of infos) lookInfos.set(id, info); };
+  el.addEventListener('click', e => {
+    const btn = e.target.closest('[data-show3d]');
+    if (!btn) return;
+    const info = lookInfos.get(btn.dataset.show3d);
+    const slot = btn.closest('[data-render]');
+    if (!info || !slot) return;
+    renders.push(mountHunter(slot, info.look, { compact: true, label: lookAlt(info) }));
+    slot.querySelector('.h3d-stage')?.focus();
+  });
 
-  const ideas = await loadLooks();
   const ideaInfos = ideas.map(l => [l.id, lookInfo(l.look, data)]);
   const ideasEl = $('#c-ideas', el);
   mount(ideasEl, html`${ideas.map((l, i) => {

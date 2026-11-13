@@ -147,11 +147,15 @@ export async function render(el, { data, query }) {
   const panel = $('#feat-panel', el);
   let rank = featuredRank;
   const kindSel = $('#feat-kind', el);
-  const showFeatured = () => {
+  const PAGE = 6;
+  let shown = PAGE;
+  const showFeatured = (reset = true) => {
+    if (reset) shown = PAGE;
     const kind = kindSel.value;
-    const list = featured.filter(f => f.rank === rank && (!kind || f.kind === kind)).sort((a, b) => a.kind.localeCompare(b.kind) || b.hr - a.hr);
-    if (!list.length) { mount(panel, html`<p class="empty">${t('featured.none')}</p>`); return; }
-    mount(panel, html`<div class="grid grid-cards">${list.map(f => {
+    const all = featured.filter(f => f.rank === rank && (!kind || f.kind === kind)).sort((a, b) => a.kind.localeCompare(b.kind) || b.hr - a.hr);
+    if (!all.length) { mount(panel, html`<p class="empty">${t('featured.none')}</p>`); return; }
+    const list = all.slice(0, shown);
+    mount(panel, html`<p class="pick-count">${t('common.results', { n: all.length })}</p><div class="grid grid-cards">${list.map(f => {
       const c = computeBuild(f.build, data);
       return buildCard({
         id: f.id,
@@ -161,8 +165,16 @@ export async function render(el, { data, query }) {
         c: { ...c, hr: Math.max(c.hr, f.hr) },
         actions: cardActions({ build: f.build, name: `${t(`weapon.${f.kind}`)} · ${f.name}`, style: f.style, kind: f.kind, favId: f.id })
       });
-    })}</div>`);
+    })}</div>
+    ${all.length > shown ? html`<p class="pager"><button type="button" class="btn" data-more-featured>${t('common.more')} (${all.length - shown})</button></p>` : ''}`);
   };
+  panel.addEventListener('click', e => {
+    if (!e.target.closest('[data-more-featured]')) return;
+    const first = shown;
+    shown += PAGE;
+    showFeatured(false);
+    panel.querySelectorAll('.build-card')[first]?.querySelector('a, button')?.focus();
+  });
   el.querySelector('.tabs').addEventListener('click', e => {
     const tab = e.target.closest('[data-rank]');
     if (!tab) return;

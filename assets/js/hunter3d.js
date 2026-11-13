@@ -4,7 +4,8 @@
 import { t } from './i18n.js';
 import { icon } from './icons.js';
 import { UNDERSUIT } from './look.js';
-import { supportsWebGL, Renderer } from './gl/renderer.js';
+import { supportsWebGL, isSoftwareGL, Renderer } from './gl/renderer.js';
+import { hunter2d } from './components.js';
 import { buildModel } from './gl/model.js';
 
 const px = n => `${n}px`;
@@ -172,7 +173,46 @@ function sharedRenderer() {
  * Uses WebGL when available (smooth, lit model), CSS 3D cuboids otherwise.
  * Returns { update(look, label), destroy() }.
  */
-export function mountHunter(container, look, { label = '', compact = false } = {}) {
+export function mountHunter(container, look, { label = '', compact = false, force = false } = {}) {
+  // Interactive renders start with the light 2D silhouette. Once the page is idle and the
+  // render is on screen, it switches to 3D automatically when a GPU is available; without
+  // GPU acceleration (slow software WebGL) the 3D view stays one click away.
+  if (!compact && !force) {
+    let current = look, currentLabel = label, real = null, observer = null, cancelled = false;
+    container.innerHTML = `<div class="h3d-deferred"><div class="h3d-deferred-art" role="img"></div>
+      <button type="button" class="btn" data-load3d>${t('cosmetic.view3d')}</button></div>`;
+    const art = container.querySelector('.h3d-deferred-art');
+    const paint = () => { art.innerHTML = String(hunter2d(current, { size: 180 })); art.setAttribute('aria-label', currentLabel); };
+    const upgrade = (focus = false) => {
+      if (real || cancelled) return;
+      real = mountHunter(container, current, { label: currentLabel, force: true });
+      if (focus) container.querySelector('.h3d-stage')?.focus();
+    };
+    paint();
+    container.querySelector('[data-load3d]').addEventListener('click', () => upgrade(true));
+    // Probe the GPU on the first interaction, then upgrade as soon as the render is visible.
+    const EVENTS = ['pointermove', 'pointerdown', 'keydown', 'scroll', 'touchstart', 'wheel'];
+    const onInteract = () => {
+      EVENTS.forEach(ev => window.removeEventListener(ev, onInteract, true));
+      if (cancelled || !('IntersectionObserver' in window)) return;
+      observer = new IntersectionObserver(entries => {
+        if (!entries.some(e => e.isIntersecting)) return;
+        observer.disconnect();
+        if (!cancelled && canUseGL() && !isSoftwareGL()) upgrade();
+      });
+      observer.observe(container);
+    };
+    EVENTS.forEach(ev => window.addEventListener(ev, onInteract, { capture: true, passive: true }));
+    return {
+      update(lk, lbl) { current = lk; currentLabel = lbl || currentLabel; if (real) real.update(lk, lbl); else paint(); },
+      destroy() {
+        cancelled = true;
+        EVENTS.forEach(ev => window.removeEventListener(ev, onInteract, true));
+        if (observer) observer.disconnect();
+        if (real) real.destroy();
+      }
+    };
+  }
   let angle = -28;
   let auto = false, raf = 0, last = 0;
   const id = `h3d-${Math.random().toString(36).slice(2, 8)}`;

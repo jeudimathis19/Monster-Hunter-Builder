@@ -51,16 +51,28 @@ const MESH_FACTORIES = {
   taper: () => tube(1, 0.6, 18, 3)
 };
 
+let software = false;
+/** True when WebGL runs on a software rasterizer (no GPU acceleration). Call supportsWebGL() first. */
+export const isSoftwareGL = () => software;
+
+/** True when WebGL works. Also detects software rasterizers (no GPU) to render lighter. */
 export function supportsWebGL() {
   try {
     const c = document.createElement('canvas');
-    return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl')));
+    const gl = window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl'));
+    if (!gl) return false;
+    const info = gl.getExtension('WEBGL_debug_renderer_info');
+    const name = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
+    software = /swiftshader|llvmpipe|software|basic render/i.test(name);
+    const lose = gl.getExtension('WEBGL_lose_context');
+    if (lose) lose.loseContext();
+    return true;
   } catch { return false; }
 }
 
 export class Renderer {
   constructor(canvas) {
-    const gl = canvas.getContext('webgl', { antialias: true, alpha: true, premultipliedAlpha: false, preserveDrawingBuffer: false });
+    const gl = canvas.getContext('webgl', { antialias: !software, alpha: true, premultipliedAlpha: false, preserveDrawingBuffer: false, powerPreference: 'low-power' });
     if (!gl) throw new Error('WebGL unavailable');
     this.gl = gl;
     this.canvas = canvas;
@@ -103,7 +115,7 @@ export class Renderer {
   }
 
   resize(width, height) {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = software ? 1 : Math.min(window.devicePixelRatio || 1, 2);
     const w = Math.max(1, Math.round(width * dpr)), h = Math.max(1, Math.round(height * dpr));
     if (this.canvas.width !== w || this.canvas.height !== h) { this.canvas.width = w; this.canvas.height = h; }
   }
