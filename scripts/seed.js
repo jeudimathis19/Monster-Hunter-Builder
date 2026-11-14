@@ -15,7 +15,7 @@ const fs = require('fs');
 const path = require('path');
 const Database = require('better-sqlite3');
 const { createGameSchema, createCommunitySchema } = require('../lib/schema');
-const { hrForRarity, hrForMonster } = require('../lib/progression');
+const { HIGH_RANK_ONLY, hrForRarity, hrForMonster, hrForTempered, hrForArchTempered } = require('../lib/progression');
 
 const API = 'https://wilds.mhdb.io';
 const LOCALES = ['en', 'fr'];
@@ -112,12 +112,23 @@ async function main() {
     }
 
     // ---- Monsters & drop sources ---------------------------------------
-    const itemMinHr = new Map(); // item id -> lowest HR at which a monster drops it (high rank)
-    const itemLowRank = new Set(); // items dropped in low rank
+    // item id -> lowest HR at which it can be obtained (any source, any rank)
+    const itemMinHr = new Map();
+    const lowerHr = (itemId, hr) => {
+      const prev = itemMinHr.get(itemId);
+      if (prev === undefined || hr < prev) itemMinHr.set(itemId, hr);
+    };
     const sourceSeen = new Set();
     for (const m of en.monsters) {
       const f = frIdx.monsters.get(m.id) || m;
-      const hr = m.kind === 'large' ? hrForMonster(m.name) : 1;
+      const large = m.kind === 'large';
+      // Some High Rank materials (rarity 5+) are listed with a low-rank condition in the source data.
+      const isLow = (rw, c) => c.rank === 'low' && rw.item.rarity <= 4 && !HIGH_RANK_ONLY.has(m.name);
+      const inLowRank = (m.rewards || []).some(rw => (rw.conditions || []).some(c => isLow(rw, c)));
+      const lowHr = large ? hrForMonster(m.name, 'low') : 1;
+      const highHr = large ? hrForMonster(m.name, 'high') : 9;
+      // Shown in the encyclopedia: the first HR at which the monster can be hunted.
+      const hr = inLowRank ? lowHr : highHr;
       const weaknesses = (m.weaknesses || []).map(w => ({
         type: w.element || w.status || w.effect, kind: w.kind, level: w.level || 1, condition: trim(w.condition)
       }));
@@ -144,11 +155,7 @@ async function main() {
             sourceSeen.add(key);
             insert('item_sources', { item_id: rw.item.id, monster_id: m.id, rank: c.rank });
           }
-          if (c.rank === 'low') itemLowRank.add(rw.item.id);
-          else {
-            const prev = itemMinHr.get(rw.item.id);
-            if (prev === undefined || hr < prev) itemMinHr.set(rw.item.id, hr);
-          }
+          lowerHr(rw.item.id, isLow(rw, c) ? lowHr : highHr);
         }
       }
     }
@@ -167,19 +174,25 @@ async function main() {
         const id = locationByName.get(loc.toLowerCase());
         if (id) insert('item_locations', { item_id: itemId, location_id: id });
       }
+      if ((info.locations || []).length) lowerHr(itemId, 1); // gathered on the maps: rarity floor applies
       const seen = new Set();
       for (const m of info.monsters || []) {
         const label = m.name.replace(/\s+/g, ' ').trim();
         const tempered = label.match(/^Tempered (.+)$/i);
         if (tempered && monsterByName.has(tempered[1].toLowerCase())) {
           other({ item_id: itemId, type: 'tempered', monster_id: monsterByName.get(tempered[1].toLowerCase()), rank: 'high' });
+          lowerHr(itemId, hrForTempered(en.monsters.find(x => x.name.toLowerCase() === tempered[1].toLowerCase()).name));
         } else if (/tempered/i.test(label)) {
           if (!seen.has('tempered-any')) { seen.add('tempered-any'); other({ item_id: itemId, type: 'tempered', rank: 'high' }); }
+          // "Tier 7/8 tempered apex" style sources: last tempered tier.
+          lowerHr(itemId, /tier 7|tier 8|apex/i.test(label) ? hrForTempered('Arkveld') : hrForTempered('Chatacabra'));
         } else if (/frenzied/i.test(label)) {
           other({ item_id: itemId, type: 'frenzied' });
+          lowerHr(itemId, 16);
         } else if (m.rates && m.rates.length && /^[A-Za-z' .-]{3,30}$/.test(label)) {
           // Small monster with documented rates. "+" materials only exist in High Rank.
           const rank = /\+$/.test(name) ? 'high' : m.rank;
+          lowerHr(itemId, rank === 'high' ? 9 : 1);
           for (const [method, chance] of m.rates) {
             const key = `${label}:${rank}:${method}`;
             if (seen.has(key)) continue;
@@ -198,20 +211,21 @@ async function main() {
     for (const it of en.items) {
       if (documented.has(it.id)) continue;
       const cert = it.name.match(/^(.+) Certificate γ$/);
-      if (cert && monsterByName.has(cert[1].toLowerCase())) other({ item_id: it.id, type: 'arch-tempered', monster_id: monsterByName.get(cert[1].toLowerCase()), rank: 'high' });
+      if (cert && monsterByName.has(cert[1].toLowerCase())) {
+        other({ item_id: it.id, type: 'arch-tempered', monster_id: monsterByName.get(cert[1].toLowerCase()), rank: 'high' });
+        lowerHr(it.id, hrForArchTempered(en.monsters.find(x => x.name.toLowerCase() === cert[1].toLowerCase()).name));
+      }
       else if (/^(Chata|Rathian|Pinnacle) Coin$/.test(it.name)) other({ item_id: it.id, type: 'arena' });
       else if (/^(Blossomdance|Flamefete|Dreamspell|Lumenhymn) (Ticket|Catalog)$/.test(it.name)) other({ item_id: it.id, type: 'event' });
     }
 
     // HR needed for a recipe: rarity tier, raised by the hardest material to get.
+    // Each material counts at its easiest source; unknown sources fall back to the rarity floor.
     const hrFor = (rarity, rank, materials) => {
       let hr = hrForRarity(rarity);
-      if (rank === 'high') {
-        for (const m of materials) {
-          if (itemLowRank.has(m.item.id)) continue;
-          const h = itemMinHr.get(m.item.id);
-          if (h && h > hr) hr = h;
-        }
+      for (const m of materials) {
+        const h = itemMinHr.get(m.item.id);
+        if (h && h > hr) hr = h;
       }
       return hr;
     };
