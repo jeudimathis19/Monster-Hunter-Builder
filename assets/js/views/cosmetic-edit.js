@@ -9,10 +9,10 @@ import { computeBuild } from '../calc.js';
 import { pieceColors, PALETTES, SKIN_TONES, randomColor, elementColor } from '../look.js';
 import { mountHunter } from '../hunter3d.js';
 import { rarity, hrBadge, rankBadge, slotLabel, materialsBlock, bindChecklist } from '../components.js';
-import { getBuild } from '../api.js';
+import { getBuild, canEdit } from '../api.js';
 import { pickGear, pickerTitle } from './picker.js';
 import { publishDialog } from './publish.js';
-import { requireSignIn } from './shared.js';
+import { requireSignIn, signInGate } from './shared.js';
 import { lookInfo, lookAlt } from './cosmetic.js';
 import { encodeBuild } from '../codec.js';
 
@@ -20,6 +20,12 @@ const SLOTS = [...ARMOR_KINDS, 'w'];
 
 export async function render(el, { data, query }) {
   setTitle(t('cosmetic.editor'));
+  if (signInGate(el, { title: t('cosmetic.editor'), reasonKey: 'acc.need.create' })) return;
+  if (query.get('edit') && !(await canEdit(query.get('edit')))) {
+    toast(t('acc.need.owner'), 'error');
+    location.replace(`#/cosmetic/${query.get('edit')}`);
+    return;
+  }
   let state = drafts.get('cosmetic') || { name: '', look: { w: null, a: {}, colors: {} } };
   const editId = query.get('edit');
   if (query.get('b')) {

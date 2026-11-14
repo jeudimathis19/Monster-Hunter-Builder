@@ -81,7 +81,7 @@ export async function render(el, { data }) {
     const editHref = `#/cosmetic/edit?b=${encodeURIComponent(encodeBuild(l.look, { name: l.name[lang] }))}`;
     return lookCard({
       id: l.id, name: l.name[lang], desc: l.desc[lang], info,
-      actions: html`<a class="btn btn-sm" href="${editHref}">${raw(icon('edit', { size: 16 }))}${t('common.edit')}</a>
+      actions: html`<a class="btn btn-sm" href="${editHref}">${raw(icon('plus', { size: 16 }))}${t('card.copy')}</a>
         ${cardActions({ build: l.look, name: l.name[lang], favId: l.id, type: 'cosmetic' }, { view: false, edit: false })}`
     });
   })}`);

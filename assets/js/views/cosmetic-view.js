@@ -34,7 +34,8 @@ export async function render(el, { data, params }) {
       </div>
       <div class="card-actions" id="cv-actions">
         <button type="button" class="btn${entry.liked ? ' is-on' : ''}" data-like aria-pressed="${!!entry.liked}">${raw(icon('heart'))}<span>${t('discover.likes', { n: entry.likes })}</span></button>
-        <a class="btn btn-sm" href="${mine ? `#/cosmetic/edit?edit=${id}` : copyHref}">${raw(icon('edit', { size: 16 }))}${t('common.edit')}</a>
+        ${mine ? html`<a class="btn btn-sm" href="#/cosmetic/edit?edit=${id}">${raw(icon('edit', { size: 16 }))}${t('common.edit')}</a>`
+          : html`<a class="btn btn-sm" href="${copyHref}">${raw(icon('plus', { size: 16 }))}${t('card.copy')}</a>`}
         ${cardActions({ build: entry.build, name: entry.name, communityId: id, type: 'cosmetic' }, { view: false, edit: false })}
         ${mine ? html`<button type="button" class="btn btn-sm btn-danger" data-delete>${raw(icon('trash', { size: 16 }))}${t('common.delete')}</button>` : ''}
       </div>

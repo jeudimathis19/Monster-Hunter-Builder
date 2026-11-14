@@ -130,6 +130,7 @@ const STRINGS = {
 
     'card.view': 'Voir le détail',
     'card.edit': 'Modifier dans le créateur',
+    'card.copy': 'Créer une copie',
     'card.fav': 'Ajouter aux favoris',
     'card.unfav': 'Retirer des favoris',
     'card.favAdded': 'Ajouté à vos favoris',
@@ -315,6 +316,7 @@ const STRINGS = {
     'acc.need.fav': 'Connectez-vous ou créez un compte gratuit pour ajouter des favoris.',
     'acc.need.publish': 'Connectez-vous ou créez un compte gratuit pour publier vos créations.',
     'acc.need.edit': 'Connectez-vous pour modifier vos créations.',
+    'acc.need.create': 'Le créateur est réservé aux membres : connectez-vous ou créez un compte gratuit pour composer et enregistrer vos créations.',
     'acc.need.owner': 'Seul l’auteur de cette création peut la modifier.',
     'acc.need.favorites': 'Vos favoris sont enregistrés sur votre compte : connectez-vous pour les retrouver.',
     'fav.title': 'Mes builds',
@@ -463,6 +465,7 @@ const STRINGS = {
 
     'card.view': 'View details',
     'card.edit': 'Edit in builder',
+    'card.copy': 'Make a copy',
     'card.fav': 'Add to favorites',
     'card.unfav': 'Remove from favorites',
     'card.favAdded': 'Added to your favorites',
@@ -648,6 +651,7 @@ const STRINGS = {
     'acc.need.fav': 'Sign in or create a free account to add favorites.',
     'acc.need.publish': 'Sign in or create a free account to publish your creations.',
     'acc.need.edit': 'Sign in to edit your creations.',
+    'acc.need.create': 'The creator is for members: sign in or create a free account to build and save your creations.',
     'acc.need.owner': 'Only the author of this creation can edit it.',
     'acc.need.favorites': 'Your favorites are saved on your account: sign in to see them.',
     'fav.title': 'My builds',

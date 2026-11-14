@@ -14,11 +14,18 @@ import {
 } from '../components.js';
 import { pickGear, pickerTitle } from './picker.js';
 import { publishDialog } from './publish.js';
-import { shareUrl, requireSignIn } from './shared.js';
-import { getBuild } from '../api.js';
+import { shareUrl, requireSignIn, signInGate } from './shared.js';
+import { getBuild, canEdit } from '../api.js';
 
 export async function render(el, { data, query }) {
   setTitle(t('builder.title'));
+  if (signInGate(el, { title: t('builder.title'), reasonKey: 'acc.need.create' })) return;
+  // Editing a published build is for its author only; others are sent back to it.
+  if (query.get('edit') && !(await canEdit(query.get('edit')))) {
+    toast(t('acc.need.owner'), 'error');
+    location.replace(`#/build/${query.get('edit')}`);
+    return;
+  }
   let state = drafts.get('builder') || { name: '', kind: 'long-sword', build: emptyBuild() };
   const editId = query.get('edit');
   if (query.get('b')) {

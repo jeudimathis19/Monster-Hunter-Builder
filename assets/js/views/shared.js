@@ -26,6 +26,25 @@ export function requireSignIn(reasonKey) {
   return false;
 }
 
+/**
+ * Editors (builder, outfit editor) are for signed-in visitors. When signed out, renders a
+ * panel inviting to sign in (coming back to the same page) and returns true.
+ */
+export function signInGate(el, { title, reasonKey }) {
+  if (isSignedIn() || !authEnabled()) return false;
+  const next = encodeURIComponent(location.hash.replace(/^#/, '') || '/');
+  el.innerHTML = String(html`
+    <div class="page-hero"><div class="container"><h1>${title}</h1></div></div>
+    <div class="container page"><div class="account-box panel">
+      <p>${t(reasonKey)}</p>
+      <p class="builder-actions">
+        <a class="btn btn-primary" href="#/account?next=${next}">${t('acc.signin')}</a>
+        <a class="btn" href="#/account?mode=signup&next=${next}">${t('acc.signup')}</a>
+      </p>
+    </div></div>`);
+  return true;
+}
+
 const registry = new Map();
 let seq = 0;
 
@@ -47,7 +66,7 @@ export function cardActions(entry, { view = true, edit = true, share = true } = 
   const href = entry.communityId ? `#/build/${entry.communityId}` : viewHref(entry.build, entry.name);
   return html`
     ${view ? html`<a class="btn btn-sm" href="${href}">${raw(icon('eye', { size: 16 }))}${t('card.view')}</a>` : ''}
-    ${edit ? html`<a class="btn btn-sm" href="${editHref(entry.build, entry.name)}">${raw(icon('edit', { size: 16 }))}${t('card.edit')}</a>` : ''}
+    ${edit ? html`<a class="btn btn-sm" href="${editHref(entry.build, entry.name)}">${raw(icon('plus', { size: 16 }))}${t('card.copy')}</a>` : ''}
     <button type="button" class="btn btn-sm btn-ghost${isFav ? ' is-on' : ''}" data-fav="${ref}" aria-pressed="${isFav}">
       ${raw(icon('heart', { size: 16 }))}<span>${isFav ? t('card.unfav') : t('card.fav')}</span></button>
     ${share ? html`<button type="button" class="btn btn-sm btn-ghost" data-share="${ref}">${raw(icon('share', { size: 16 }))}<span class="sr-only">${t('common.share')}</span></button>` : ''}`;
