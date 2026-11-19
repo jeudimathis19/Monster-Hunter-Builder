@@ -1,7 +1,7 @@
 // Small WebGL renderer: smooth-shaded parts with warm key light, cool fill, rim light and soft ground shadow.
 
 import { perspective, lookAt, mul, normalMat, rotY, ident } from './math.js';
-import { sphere, dome, tube, roundBox, ring, disc, flatten, plate, OUTLINES } from './meshes.js';
+import { sphere, dome, tube, roundBox, ring, disc, flatten, plate, link, OUTLINES } from './meshes.js';
 
 const VS = `
 attribute vec3 aPos; attribute vec3 aNor;
@@ -93,22 +93,23 @@ void main() {
 }`;
 
 const MESH_FACTORIES = {
-  sphere: () => sphere(26, 34),
-  lowsphere: () => sphere(10, 12),
+  sphere: () => sphere(44, 60),
+  lowsphere: () => sphere(14, 18),
   crystal: () => sphere(2, 4),
-  dome: () => dome(14, 34),
-  box: () => roundBox(0.2, 16, 22),
-  slab: () => roundBox(0.45, 16, 22),
-  ring: () => ring(0.18),
-  disc: () => disc(),
-  tube: () => tube(1, 1, 26, 4),
-  cone: () => tube(1, 0.02, 18, 4),
-  taper: () => tube(1, 0.6, 18, 3),
+  dome: () => dome(24, 60),
+  box: () => roundBox(0.2, 28, 40),
+  slab: () => roundBox(0.45, 28, 40),
+  ring: () => ring(0.18, 64, 18),
+  disc: () => disc(64),
+  tube: () => tube(1, 1, 48, 8),
+  cone: () => tube(1, 0.02, 32, 8),
+  taper: () => tube(1, 0.6, 32, 6),
+  link: () => link(),
   // Faceted (flat-shaded) variants for forged armor plates.
-  facet: () => flatten(sphere(7, 10)),
-  fdome: () => flatten(dome(4, 10)),
-  plate: () => flatten(roundBox(0.14, 6, 8)),
-  fcone: () => flatten(tube(1, 0.02, 6, 1)),
+  facet: () => flatten(sphere(10, 16)),
+  fdome: () => flatten(dome(6, 16)),
+  plate: () => flatten(roundBox(0.14, 8, 12)),
+  fcone: () => flatten(tube(1, 0.02, 8, 2)),
   ...Object.fromEntries(Object.entries(OUTLINES).map(([k, o]) => [k, () => plate(o)]))
 };
 
@@ -133,7 +134,7 @@ export function supportsWebGL() {
 
 export class Renderer {
   constructor(canvas) {
-    const gl = canvas.getContext('webgl', { antialias: !software, alpha: true, premultipliedAlpha: false, preserveDrawingBuffer: false, powerPreference: 'low-power' });
+    const gl = canvas.getContext('webgl', { antialias: !software, alpha: true, premultipliedAlpha: false, preserveDrawingBuffer: false, powerPreference: 'high-performance' });
     if (!gl) throw new Error('WebGL unavailable');
     this.gl = gl;
     this.canvas = canvas;
@@ -162,8 +163,8 @@ export class Renderer {
     const gl = this.gl;
     // "tube:0.6" = tube whose top radius is 0.6 x the bottom radius.
     // "ftube:0.8" = the same, with 8 flat facets.
-    const data = name.startsWith('tube:') ? tube(1, Math.max(0.02, +name.slice(5)), 26, 4)
-      : name.startsWith('ftube') ? flatten(tube(1, Math.max(0.02, +(name.split(':')[1] || 1)), 8, 1))
+    const data = name.startsWith('tube:') ? tube(1, Math.max(0.02, +name.slice(5)), 48, 8)
+      : name.startsWith('ftube') ? flatten(tube(1, Math.max(0.02, +(name.split(':')[1] || 1)), 10, 2))
       : MESH_FACTORIES[name]();
     const m = { count: data.idx.length };
     m.pos = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, m.pos); gl.bufferData(gl.ARRAY_BUFFER, data.pos, gl.STATIC_DRAW);

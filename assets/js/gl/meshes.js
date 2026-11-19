@@ -164,7 +164,7 @@ export function flatten(m) {
  * Forged plate: a 2D outline (points in [-1,1], star-shaped around the origin) extruded along Z,
  * with a raised central ridge on both faces and bevelled edges. Flat-shaded.
  */
-export function plate(outline, ridge = 1, rim = 0.3) {
+export function plate(outline, ridge = 1, rim = 0.3, inset = 0.8) {
   const pos = [], nor = [], idx = [];
   const tri = (p0, p1, p2, out) => {
     const u = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]], v = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
@@ -175,11 +175,16 @@ export function plate(outline, ridge = 1, rim = 0.3) {
     if (n[0] * out[0] + n[1] * out[1] + n[2] * out[2] < 0) n = n.map(x => -x);
     for (const p of [p0, p1, p2]) { pos.push(...p); nor.push(...n); idx.push(idx.length); }
   };
-  const k = outline.length;
+  const k = outline.length, mid = rim + (ridge - rim) * 0.62;
   for (let i = 0; i < k; i++) {
     const [ax, ay] = outline[i], [bx, by] = outline[(i + 1) % k];
-    tri([0, 0, ridge], [ax, ay, rim], [bx, by, rim], [0, 0, 1]);
-    tri([0, 0, -ridge], [bx, by, -rim], [ax, ay, -rim], [0, 0, -1]);
+    const [ix, iy, jx, jy] = [ax * inset, ay * inset, bx * inset, by * inset];
+    for (const sg of [1, -1]) {
+      const o = [0, 0, sg];
+      tri([0, 0, sg * ridge], [ix, iy, sg * mid], [jx, jy, sg * mid], o);                 // raised centre
+      tri([ix, iy, sg * mid], [ax, ay, sg * rim], [bx, by, sg * rim], [ax + bx, ay + by, sg * 2]); // bevelled border
+      tri([ix, iy, sg * mid], [bx, by, sg * rim], [jx, jy, sg * mid], [ax + bx, ay + by, sg * 2]);
+    }
     const out = [(ax + bx) / 2, (ay + by) / 2, 0];
     tri([ax, ay, rim], [bx, by, rim], [bx, by, -rim], out);
     tri([ax, ay, rim], [bx, by, -rim], [ax, ay, -rim], out);
@@ -211,3 +216,36 @@ export const OUTLINES = {
   'blade-cleaver': [[-1, 1], [0.55, 1], [1.15, 0.55], [1.15, 0.1], [0.95, 0.05], [1, -1], [-1, -1], [-1, 0.5], [-1.2, 0.62]],
   'blade-curved': [[0.55, 1], [1, 0.6], [1, -1], [-1, -1], [-1, 0.45], [-0.4, 0.85]]
 };
+
+/**
+ * Chain link: a stadium-shaped torus along Y (two half circles of radius R joined by straight
+ * sides of half-length L), swept by a round wire of radius r. Height 2(L+R+r).
+ */
+export function link(R = 0.5, L = 0.42, r = 0.17, seg = 40, sides = 14) {
+  const pos = [], nor = [], idx = [];
+  const arc = Math.PI * R, per = 2 * arc + 4 * L;
+  const at = u => {                                         // point + outward in-plane normal on the path
+    u = ((u % per) + per) % per;
+    if (u < 2 * L) return { p: [R, -L + u, 0], n: [1, 0, 0] };
+    u -= 2 * L;
+    if (u < arc) { const a = u / R; return { p: [R * Math.cos(a), L + R * Math.sin(a), 0], n: [Math.cos(a), Math.sin(a), 0] }; }
+    u -= arc;
+    if (u < 2 * L) return { p: [-R, L - u, 0], n: [-1, 0, 0] };
+    u -= 2 * L;
+    const a = Math.PI + u / R;
+    return { p: [R * Math.cos(a), -L + R * Math.sin(a), 0], n: [Math.cos(a), Math.sin(a), 0] };
+  };
+  for (let i = 0; i <= seg; i++) {
+    const { p, n } = at((i / seg) * per);
+    for (let j = 0; j <= sides; j++) {
+      const v = (j / sides) * Math.PI * 2, cv = Math.cos(v), sv = Math.sin(v);
+      const d = [n[0] * cv, n[1] * cv, sv];
+      pos.push(p[0] + d[0] * r, p[1] + d[1] * r, d[2] * r); nor.push(...d);
+    }
+  }
+  for (let i = 0; i < seg; i++) for (let j = 0; j < sides; j++) {
+    const a = i * (sides + 1) + j, b = a + sides + 1;
+    idx.push(a, a + 1, b, b, a + 1, b + 1);
+  }
+  return finish(pos, nor, idx);
+}
