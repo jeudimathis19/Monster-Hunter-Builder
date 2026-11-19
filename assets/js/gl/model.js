@@ -1,7 +1,7 @@
 // Procedural hunter model: anatomy + armor shells whose silhouette follows each armor family
 // (horns, fur, robes, fins, crystals, spikes...). Units are meters, y up, +z faces the camera.
 
-import { chain, translate, scale, rotX, rotY, rotZ, alignY, hex } from './math.js';
+import { chain, translate, scale, rotX, rotY, rotZ, alignY, hex, sub, norm } from './math.js';
 import { UNDERSUIT } from '../look.js';
 
 // Visual traits per armor family (matched against the set key).
@@ -175,6 +175,55 @@ export function buildModel(look) {
     }
   };
 
+  const steelMat = { spec: 1, shin: 110, metal: 0.92, pattern: 1, bump: 0.25, vary: 0.06, sheen: 0.1 };
+  /**
+   * Interlocking chain along a polyline: links spaced by their inner length, every other one
+   * turned a quarter turn around the path. `put` places a mesh (P in body space, W on a weapon).
+   */
+  const chainPath = (pts, size, color = '#9ea0a8', mat = steelMat, put = P, closed = false) => {
+    const path = closed ? [...pts, pts[0]] : pts;
+    const pitch = size * 1.5;
+    let carry = 0, n = 0;
+    for (let i = 0; i < path.length - 1; i++) {
+      const a = path[i], d = sub(path[i + 1], a), len = Math.hypot(...d);
+      if (len < 1e-6) continue;
+      const u = norm(d);
+      for (let t = carry; t < len; t += pitch) {
+        const c = [a[0] + u[0] * t, a[1] + u[1] * t, a[2] + u[2] * t];
+        const { m } = alignY(c, [c[0] + u[0], c[1] + u[1], c[2] + u[2]]);
+        put('link', chain(m, rotY(n++ % 2 ? Math.PI / 2 : 0), scale(size, size, size)), color, mat);
+        carry = t + pitch - len;
+      }
+      if (carry < 0) carry = 0;
+    }
+  };
+  /** Points on an ellipse loop (axis y), optionally tilted around x. */
+  const loop = (c, rx, rz, n = 36, tilt = 0) => Array.from({ length: n }, (_, i) => {
+    const a = (i / n) * Math.PI * 2, y = Math.sin(a) * rz * Math.sin(tilt);
+    return [c[0] + Math.cos(a) * rx, c[1] + y, c[2] + Math.sin(a) * rz * Math.cos(tilt)];
+  });
+  /** Helix around an axis from p0 to p1 (for chain-wrapped limbs). */
+  const helix = (p0, p1, r, turns, n = 60) => Array.from({ length: n + 1 }, (_, i) => {
+    const t = i / n, a = t * turns * Math.PI * 2;
+    return [p0[0] + (p1[0] - p0[0]) * t + Math.cos(a) * r, p0[1] + (p1[1] - p0[1]) * t, p0[2] + (p1[2] - p0[2]) * t + Math.sin(a) * r];
+  });
+  /** Hanging swag between two points (simple catenary-like dip). */
+  const swag = (p0, p1, dip, n = 16) => Array.from({ length: n + 1 }, (_, i) => {
+    const t = i / n;
+    return [p0[0] + (p1[0] - p0[0]) * t, p0[1] + (p1[1] - p0[1]) * t - Math.sin(t * Math.PI) * dip, p0[2] + (p1[2] - p0[2]) * t + Math.sin(t * Math.PI) * dip * 0.15];
+  });
+  /** Leather strap made of short flat segments following a path, with an optional buckle. */
+  const strap = (pts, w, color, buckleAt = -1) => {
+    for (let i = 0; i < pts.length - 1; i++) {
+      const { m, len } = alignY(pts[i], pts[i + 1]);
+      P('plate', chain(m, translate(0, len / 2, 0), scale(w, len / 2 + 0.004, 0.006)), hex(color), leather);
+      if (i === buckleAt) {
+        P('ring', chain(m, translate(0, len / 2, 0.008), rotX(Math.PI / 2), scale(w * 1.3, 0.6, w * 1.1)), hex('#c9b892'), rivetMat);
+        P('box', chain(m, translate(0, len / 2, 0.01), scale(0.003, w * 1.1, 0.004)), hex('#c9b892'), rivetMat);
+      }
+    }
+  };
+
   const skin = look.skin;
   const suit = UNDERSUIT;
   const part = k => look.parts[k] || { piece: null };
@@ -224,6 +273,11 @@ export function buildModel(look) {
       // Helmet: shell, crest ridge, brow, visor, cheek guards and a neck guard.
       ell([0, 1.66, -0.005], [0.123 * b, 0.135 * b, 0.13 * b], head.p, hm, [0, 0.31, 0], 'facet');
       box([0, 1.745, -0.01], [0.014, 0.05, 0.12 * b], head.s, hm, [0, 0, 0], 'plate');          // crest ridge
+      for (const sd of [-1, 1]) {
+        rivets([-0.08, -0.03, 0.02, 0.07].map(z => [sd * 0.018, 1.77 - Math.abs(z) * 0.2, z * b]), 0.006);
+        blade([sd * 0.125 * b, 1.645, -0.01], [0.04, 0.04, 0.012], head.s, hm, [0, sd * 1.5708, 0], 'hexp'); // ear plate
+        ell([sd * 0.132 * b, 1.645, -0.01], [0.012, 0.012, 0.008], '#c9b892', rivetMat, [0, sd * 1.5708, 0], 'facet');
+      }
       for (const s of [-1, 1]) blade([s * 0.055 * b, 1.672, 0.112 * b], [0.026, 0.07 * b, 0.016], head.s, hm, [0.1, s * 0.35, s * -1.3], 'shard'); // angled brow plates
       box([0, 1.622, 0.118 * b], [0.07, 0.016, 0.014], '#120d0a', { spec: 0.6, shin: 60, emit: ht.glow ? 0.6 : 0 }); // visor slit
       box([0, 1.582, 0.118 * b], [0.055, 0.03, 0.016], head.p, hm, [-0.25, 0, 0], 'plate');     // mouth guard
@@ -274,6 +328,12 @@ export function buildModel(look) {
       for (const s of [-1, 1]) box([s * 0.1, 1.38, -0.11 * b], [0.07, 0.12, 0.02], chest.p, cm, [0.15, s * -0.3, 0], 'plate'); // back plates
     }
     ring([0, 1.47, 0], [0.098 * b, 0.07, 0.088 * b], chest.s, cm);                 // collar
+    if (!ct.chainblades && !ct.robe) {
+      strap([[0.2 * b, 1.45, 0.08 * b], [0.1 * b, 1.37, 0.162 * b], [-0.02, 1.25, 0.172 * b], [-0.12 * b, 1.13, 0.155 * b], [-0.17 * b, 1.04, 0.1 * b]], 0.016, '#4a3424', 2);
+      box([0.06, 1.15, -0.135 * b], [0.05, 0.045, 0.025], '#4a3424', leather, [0, 0, 0], 'plate');         // back pouch
+      box([0.06, 1.19, -0.15 * b], [0.052, 0.012, 0.028], '#5a4030', leather, [0.2, 0, 0], 'plate');
+      ell([0.06, 1.165, -0.165 * b], [0.008, 0.008, 0.006], '#c9b892', rivetMat, [0, 0, 0], 'facet');
+    }
     box([0, 1.48, 0.07], [0.07, 0.03, 0.02], chest.p, cm, [-0.5, 0, 0], 'plate');      // gorget
     for (const s of [-1, 1]) {
       // Layered pauldrons with a trimmed edge.
@@ -293,7 +353,11 @@ export function buildModel(look) {
     if (ct.cape) { box([0, 1.05, -0.17], [0.2, 0.38, 0.012], chest.s, { ...cloth, sheen: 0.06 }, [0.12, 0, 0], 'plate'); for (const x of [-0.14, -0.05, 0.05, 0.14]) cone([x, 0.7, -0.22], [x * 1.1, 0.62, -0.23], 0.03, chest.s, cloth); }
     if (ct.wings === 'small') for (const s of [-1, 1]) { horn([s * 0.1, 1.38, -0.14], [s * 0.3, 1.5, -0.25], [s * 0.42, 1.35, -0.3], 0.02, chest.s, am, 5); ell([s * 0.27, 1.32, -0.24], [0.17, 0.1, 0.008], chest.p, cm, [0.2, s * 0.55, s * 0.45]); }
     if (ct.wings === 'insect') for (const s of [-1, 1]) for (const [y, r] of [[1.36, 0.22], [1.15, 0.16]]) ell([s * 0.16, y, -0.18], [r, r * 0.6, 0.008], chest.s, { spec: 0.6, shin: 40, alpha: 0.85, sheen: 0.3 }, [0.1, s * 0.4, s * 0.5]);
-    if (ct.chains) { ring([0, 1.23, 0.005], [0.2, 0.15, 0.135], chest.s, { spec: 0.9, shin: 70 }, [0.25, 0, 0]); for (let i = 0; i < 5; i++) ring([-0.12 + i * 0.06, 1.2 + Math.abs(i - 2) * 0.02, 0.13], [0.022, 0.4, 0.022], chest.s, { spec: 0.9, shin: 70 }, [0, 0, i % 2 ? 1.57 : 0]); }
+    if (ct.chains) {
+      chainPath(loop([0, 1.23, 0.005], 0.178 * b, 0.132 * b, 48, 0.25), 0.012, undefined, undefined, P, true);
+      chainPath(swag([-0.13 * b, 1.33, 0.142 * b], [0.13 * b, 1.33, 0.142 * b], 0.1), 0.011);
+      for (const sd of [-1, 1]) ell([sd * 0.13 * b, 1.33, 0.142 * b], [0.016, 0.016, 0.01], '#c9b892', rivetMat, [0, 0, 0], 'facet');
+    }
     if (ct.leaves) for (let i = 0; i < 9; i++) ell([Math.cos(i * 0.8) * 0.16, 1.47 - (i % 3) * 0.08, -0.1 + Math.sin(i * 0.8) * 0.06], [0.065, 0.012, 0.11], chest.s, cloth, [0.6, i * 0.8, 0.3]);
     if (ct.tech) for (const s of [-1, 1]) box([s * 0.12, 1.2, 0.12 * b], [0.02, 0.06, 0.01], chest.s, { ...gemMat, emit: 0.5 });
   }
@@ -312,19 +376,27 @@ export function buildModel(look) {
     cone([s * 0.29, 1.15, -0.03], [s * 0.31, 1.15, -0.1], 0.025, arms.s, at.spikes ? acc : am); // elbow point
     limb([s * 0.245, 1.4, 0], [s * 0.28, 1.2, 0.01], 0.066 * b, 0.06 * b, arms.p, { ...am, spec: am.spec * 0.8 }, 'ftube'); // rerebrace
     ring([s * 0.255, 1.33, 0.003], [0.068 * b, 0.25, 0.068 * b], arms.s, am, [0, 0, s * -0.15]);
+    if (!robeSleeve) for (let i = 0; i < 3; i++) {                                              // layered upper-arm lames
+      const t = 0.12 + i * 0.13, p0 = [s * (0.245 + 0.035 * t), 1.4 - 0.2 * t, 0.01 * t], p1 = [s * (0.245 + 0.035 * (t + 0.08)), 1.4 - 0.2 * (t + 0.08), 0.01 * (t + 0.08)];
+      limb(p0, p1, (0.078 - i * 0.003) * b, (0.072 - i * 0.003) * b, i % 2 ? arms.s : arms.p, am, 'ftube');
+    }
+    if (!robeSleeve) { limb([s * 0.316, 0.905, 0.047], [s * 0.319, 0.875, 0.05], 0.062 * b, 0.06 * b, arms.s, am, 'ftube'); rivets([0, 1, 2, 3].map(i => { const a = i * 1.57 + 0.4; return [s * 0.318 + Math.cos(a) * 0.062 * b, 0.89, 0.05 + Math.sin(a) * 0.062 * b]; }), 0.006); } // wrist cuff
     // Gauntlet: back plate, knuckles and fingers (claws for beastly families).
     ell([s * 0.322, 0.85, 0.06], [0.05, 0.058, 0.045], arms.p, am, [0, 0.3, 0], 'facet');
     box([s * 0.335, 0.855, 0.085], [0.035, 0.045, 0.012], arms.s, am, [0, s * 0.25, 0], 'plate');
     const claws = at.spikes || at.horns || at.fur;
     for (let f = 0; f < 4; f++) {
       const x = s * (0.305 + f * 0.012), z = 0.08 + f * 0.004;
-      if (claws) cone([x, 0.8, z], [x + s * 0.005, 0.74, z + 0.03], 0.009, arms.s, acc);
-      else limb([x, 0.81, z], [x, 0.775, z + 0.012], 0.009, 0.008, arms.p, am);
+      const k0 = [x, 0.815, z], k1 = [x + s * 0.002, 0.79, z + 0.012], k2 = [x + s * 0.004, 0.768, z + 0.024];
+      ell(k0, [0.011, 0.009, 0.011], arms.s, am, [0, 0, 0], 'facet');                            // knuckle
+      limb(k0, k1, 0.0095, 0.0088, arms.p, am, 'ftube'); ell(k1, [0.009, 0.008, 0.009], arms.p, am, [0, 0, 0], 'lowsphere');
+      if (claws) cone(k1, [x + s * 0.006, 0.735, z + 0.04], 0.0088, arms.s, acc);
+      else limb(k1, k2, 0.0088, 0.008, arms.p, am, 'ftube');
     }
     if (at.fins) { ell([s * 0.355, 1.0, -0.005], [0.01, 0.14, 0.055], arms.s, am, [0, 0, s * -0.25]); ell([s * 0.35, 0.93, -0.02], [0.008, 0.08, 0.04], arms.s, am, [0.2, 0, s * -0.4]); }
     if (at.spikes) spikes([[s * 0.33, 1.05, -0.03], [s * 0.335, 0.98, -0.035], [s * 0.34, 0.91, -0.03]], [s * 0.55, 0.15, -0.8], 0.07, 0.015, arms.s, acc);
     if (at.fur) ruff([s * 0.3, 1.12, 0.02], 0.065, 0.065, 9, 0.05, arms.s, 0.6);
-    if (at.chains) for (const y of [0.95, 1.03]) ring([s * (0.3 + (1.03 - y) * 0.1), y, 0.035], [0.07, 0.07, 0.07], arms.s, { spec: 0.9, shin: 70 });
+    if (at.chains && !at.chainblades) chainPath(helix([s * 0.292, 1.07, 0.02], [s * 0.312, 0.93, 0.045], 0.066 * b, 2.2), 0.01);
     if (at.crystals) crystalCluster([s * 0.35, 1.02, -0.02], s * -0.4, arms.s, 2, 0.9);
   }
 
@@ -349,6 +421,10 @@ export function buildModel(look) {
       for (const s of [-1, 1]) box([s * 0.09, 0.665, 0.13 * b], [0.055, 0.012, 0.014], waist.s, wm, [-0.2, s * -0.25, 0]);
       lames([0, 0.85, -0.12 * b], [0.13, 0.06, 0.012], 3, 0.07, waist.p, wm, [0.2, Math.PI, 0]);
       for (const s of [-1, 1]) box([s * 0.17 * b, 0.82, 0], [0.012, 0.11, 0.08], waist.p, wm, [0, 0, s * 0.18], 'plate');
+      for (const s of [-1, 1]) for (let i = 0; i < 2; i++) blade([s * 0.185 * b, 0.72 - i * 0.04, 0.03 - i * 0.05], [0.035, 0.05, 0.008], waist.s, wm, [0, s * 1.5708, Math.PI], 'shard'); // side tabs
+      limb([-0.12 * b, 0.9, -0.12 * b], [-0.16 * b, 0.72, -0.13 * b], 0.018, 0.012, '#2a211b', leather, 'ftube');   // knife sheath
+      limb([-0.12 * b, 0.9, -0.12 * b], [-0.11 * b, 0.97, -0.12 * b], 0.01, 0.01, '#5a4030', leather);
+      ell([-0.108 * b, 0.975, -0.12 * b], [0.013, 0.008, 0.013], '#c9b892', rivetMat, [0, 0, 0], 'facet');
       if (wt.spikes) for (const s of [-1, 1]) cone([s * 0.1, 0.66, 0.13 * b], [s * 0.11, 0.6, 0.16 * b], 0.014, waist.s, acc);
     }
     if (wt.tentacles) for (let i = 0; i < 6; i++) {
@@ -356,7 +432,7 @@ export function buildModel(look) {
       horn([Math.cos(a) * 0.15, 0.9, Math.sin(a) * 0.11], [Math.cos(a) * 0.25, 0.7, Math.sin(a) * 0.2], [Math.cos(a + 0.4) * 0.22, 0.42, Math.sin(a + 0.4) * 0.17], 0.024, waist.s, { spec: 0.4, shin: 30, emit: wt.glow ? 0.2 : 0 }, 6);
     }
     if (wt.fur) ruff([0, 0.9, 0], 0.18, 0.13, 16, 0.08, waist.s, 0.3);
-    if (wt.chains) ring([0, 0.9, 0], [0.19, 0.1, 0.14], waist.s, { spec: 0.9, shin: 70 }, [0, 0, 0.15]);
+    if (wt.chains) { chainPath(loop([0, 0.9, 0], 0.19 * b, 0.14 * b, 48, 0.15), 0.012, undefined, undefined, P, true); chainPath(swag([0.12 * b, 0.9, 0.12 * b], [0.18 * b, 0.86, -0.02], 0.12, 10), 0.01); }
     if (wt.crystals) for (const s of [-1, 1]) crystalCluster([s * 0.17, 0.9, -0.03], s * -0.6, waist.s, 2, 0.8);
   }
 
@@ -372,6 +448,9 @@ export function buildModel(look) {
     limb([s * 0.107, 0.5, 0.015], [s * 0.11, 0.1, -0.005], 0.074 * b, 0.068 * b, legs.p, lm, 'ftube'); // greave
     blade([s * 0.108, 0.3, 0.078 * b], [0.05, 0.17, 0.02], legs.s, lm, [0, 0, Math.PI], 'shard');      // shin plate, point down
     for (const y of [0.42, 0.2]) ring([s * 0.109, y, 0.005], [0.075 * b, 0.25, 0.075 * b], legs.s, lm);
+    for (const y of [0.62, 0.47]) { P('ftube', chain(translate(s * 0.107, y, 0.012), scale(0.079 * b, 0.016, 0.079 * b)), hex('#4a3424'), leather); box([s * 0.107, y + 0.008, 0.088 * b], [0.012, 0.012, 0.004], '#c9b892', rivetMat, [0, 0, 0], 'plate'); } // knee straps
+    P('ftube:0.95', chain(translate(s * 0.11, 0.1, -0.005), scale(0.075 * b, 0.035, 0.075 * b)), hex(legs.s), lm);          // ankle cuff
+    for (let i = 0; i < 3; i++) blade([s * 0.11, 0.085 - i * 0.008, 0.1 + i * 0.03], [0.045 * b - i * 0.006, 0.03, 0.012], i % 2 ? legs.s : legs.p, lm, [-1.25, 0, 0], 'hexp'); // toe lames
     rivets([[s * 0.108, 0.42, 0.083 * b], [s * 0.108, 0.2, 0.083 * b], [s * 0.108, 0.62, 0.095 * b]], 0.008);
     ell([s * 0.11, 0.06, 0.05], [0.07 * b, 0.058, 0.13], legs.p, lm, [0, 0, 0], 'facet');              // sabaton
     cone([s * 0.11, 0.05, 0.15], [s * 0.11, 0.035, 0.22], 0.035, legs.s, lm);                         // pointed toe
@@ -402,12 +481,16 @@ export function buildModel(look) {
   if (arms.piece && T.arms.chainblades) {
     const am = glowMat('arms');
     for (const sd of [-1, 1]) {
-      for (let i = 0; i < 4; i++) ring([sd * (0.29 + i * 0.008), 1.08 - i * 0.055, 0.03], [0.072, 0.35, 0.072], '#9a9aa2', { spec: 1, shin: 90, metal: 0.9, pattern: 1, bump: 0.3 }, [0.35 * (i % 2 ? 1 : -1), 0, sd * -0.12]);
+      chainPath(helix([sd * 0.29, 1.1, 0.02], [sd * 0.315, 0.9, 0.05], 0.072 * bulk('arms'), 3), 0.011);
+      chainPath(swag([sd * 0.33, 0.95, 0.06], [sd * 0.37, 0.98, -0.05], 0.09, 10), 0.01);   // loose end
       ell([sd * 0.37, 0.96, -0.04], [0.012, 0.2, 0.06], arms.s, { ...am, spec: 0.9, shin: 100, metal: 0.8 }, [0.25, 0, sd * -0.35]);
       cone([sd * 0.39, 0.78, -0.07], [sd * 0.4, 0.68, -0.09], 0.04, arms.s, { ...am, metal: 0.8 });
     }
   }
-  if (chest.piece && ct.chainblades) for (let i = 0; i < 7; i++) ring([-0.15 + i * 0.05, 1.42 - i * 0.045, 0.14 * bulk('chest') - Math.abs(i - 3) * 0.004], [0.022, 0.4, 0.022], '#9a9aa2', { spec: 1, shin: 90, metal: 0.9 }, [0, 0, i % 2 ? 1.57 : 0.7]);
+  if (chest.piece && ct.chainblades) {
+    const b = bulk('chest');
+    chainPath([[-0.2 * b, 1.45, 0.1 * b], [-0.1 * b, 1.38, 0.16 * b], [0.03, 1.27, 0.168 * b], [0.12 * b, 1.16, 0.15 * b], [0.17 * b, 1.06, 0.11 * b]], 0.012);
+  }
 
   // Mane: thick fur over the shoulders and back.
   if (chest.piece && ct.mane) {
@@ -475,9 +558,19 @@ export function buildModel(look) {
     const bx = (c, h, color, mat, mesh = 'box', rz = 0) => W(mesh, chain(translate(...c), rotZ(rz), scale(...h)), color, mat);
     const cyl = (c, r, h, color, mat, mesh = 'tube') => W(mesh, chain(translate(c[0], c[1], c[2]), scale(r, h, r)), color, mat);
     const tip = (c, r, h, color, mat, rz = 0) => W('cone', chain(translate(...c), rotZ(rz), scale(r, h, r * 0.35)), color, mat);
-    const wrap = (y0, y1, r) => { for (let y = y0; y < y1; y += 0.035) W('ring', chain(translate(0, y, 0), scale(r, 0.4, r)), hex('#5a4030'), leather); };
+    const wrap = (y0, y1, r) => {
+      let i = 0;
+      for (let y = y0; y < y1; y += 0.022) W('ring', chain(translate(0, y, 0), rotX(i++ % 2 ? 0.22 : -0.22), scale(r, 0.32, r)), hex(i % 2 ? '#5a4030' : '#4a3424'), leather);
+    };
     /** Forged plate in weapon space; `flip` mirrors it (rotation, so normals stay correct). */
     const F = (shape, c, half, rz, color, mat, flip = false) => W(shape, chain(translate(...c), rotY(flip ? Math.PI : 0), rotZ(rz), scale(...half)), color, mat);
+    /** Outline blade with a honed, lighter rim showing all around its edge and engraved fullers. */
+    const honed = (shape, c, half, rz, color, mat) => {
+      F(shape, c, [half[0] * 1.06, half[1] * 1.025, half[2] * 0.45], rz, '#e6e2da', edge);
+      F(shape, c, half, rz, color, mat);
+      for (const z of [1, -1]) W('box', chain(translate(c[0], c[1] - half[1] * 0.12, c[2] + z * half[2] * 0.95), rotZ(rz), scale(half[0] * 0.06, half[1] * 0.62, 0.002)), '#1a1410', metal);
+    };
+    const studs = (pts) => pts.forEach(([x, y, z = 0.03]) => W('facet', chain(translate(x, y, z), scale(0.009, 0.009, 0.007)), '#c9b892', rivetMat));
     const wcone = (b0, t0, r, color, mat, mesh = 'fcone') => { const { m, len } = alignY(b0, t0); W(mesh, chain(m, scale(r, len, r)), color, mat); };
     /** Shield in the tree's outline, with an inner accent plate and a boss. `put` places a mesh. */
     const shield = (put, c, r) => {
@@ -498,8 +591,8 @@ export function buildModel(look) {
 
     switch (w.kind) {
       case 'great-sword':
-        F(edgeShape, [0, 0.15, 0], [0.1, 0.5, 0.016], 0, w.p, bm);
-        if ((st.edge || 'straight') === 'straight') for (const s of [-1, 1]) bx([s * 0.098, 0.1, 0], [0.006, 0.44, 0.007], '#e8e4dc', edge);
+        honed(edgeShape, [0, 0.15, 0], [0.1, 0.5, 0.016], 0, w.p, bm);
+        studs([[-0.1, -0.37, 0.045], [0.1, -0.37, 0.045], [0, -0.37, 0.05]]);
         bx([0, 0.08, 0.014], [0.014, 0.36, 0.005], w.s, acc);
         F(st.edge === 'cleaver' ? 'plate' : 'hexp', [0, -0.37, 0], [0.16, 0.05, 0.045], 0, w.s, acc);
         cyl([0, -0.62, 0], 0.022, 0.23, grip, cloth); wrap(-0.6, -0.4, 0.024);
@@ -508,17 +601,26 @@ export function buildModel(look) {
         break;
       case 'long-sword': {
         const segs = st.edge === 'curved' || !st.edge || st.edge === 'straight' ? 'box' : 'plate';
-        for (let i = 0; i < 4; i++) {                                                                  // curved blade in 4 segments
-          const y = -0.28 + i * 0.3, a = -i * 0.035, x = -i * i * 0.006;
-          bx([x, y, 0], [0.024 - i * 0.002, 0.155, 0.007], w.p, bm, segs, a);
-          bx([x - 0.022 + i * 0.002, y, 0], [0.004, 0.152, 0.005], '#ecebe6', edge, 'box', a);
-          bx([x + 0.008, y, 0.006], [0.005, 0.15, 0.004], st.glow || w.s, st.glow ? gm : acc, 'box', a);
-          if (st.edge === 'serrated' || st.edge === 'jagged') F('fang', [x + 0.03, y + 0.05, 0], [0.012, 0.04, 0.006], -1.1 + a, w.p, bm);
+        // Continuous curved blade: short overlapping sections following a smooth arc.
+        const N = 10, curve = t => [-0.075 * t * t, -0.43 + 1.36 * t, 0];
+        const seg = (p0, p1, hw, dx, dz, hz, color, mat, mesh = 'box') => {
+          const q0 = [p0[0] + dx, p0[1], dz], q1 = [p1[0] + dx, p1[1], dz];
+          // Frame kept in the blade plane (x across the blade, y along it, z through it).
+          const dx2 = q1[0] - q0[0], dy2 = q1[1] - q0[1], len = Math.hypot(dx2, dy2), ux = dx2 / len, uy = dy2 / len;
+          const m = new Float32Array([uy, -ux, 0, 0, ux, uy, 0, 0, 0, 0, 1, 0, q0[0], q0[1], q0[2], 1]);
+          W(mesh, chain(m, translate(0, len / 2, 0), scale(hw, len / 2 + 0.006, hz)), color, mat);
+        };
+        for (let i = 0; i < N; i++) {
+          const t0 = i / N, t1 = (i + 1) / N, p0 = curve(t0), p1 = curve(t1), hw = 0.03 - t0 * 0.008;
+          seg(p0, p1, hw, 0, 0, 0.008, w.p, bm, segs);
+          seg(p0, p1, 0.004, -hw + 0.002, 0, 0.005, '#ecebe6', edge);                              // honed edge
+          for (const z of [0.007, -0.007]) seg(p0, p1, 0.004, hw * 0.25, z, 0.003, st.glow || w.s, st.glow ? gm : acc); // fullers
+          if ((st.edge === 'serrated' || st.edge === 'jagged') && i % 2 === 0) F('fang', [p0[0] + hw + 0.006, p0[1] + 0.03, 0], [0.012, 0.04, 0.006], -1.1, w.p, bm);
         }
-        F('shard', [-0.06, 0.98, 0], [0.024, 0.09, 0.007], -0.15, w.p, bm);
+        F('shard', [-0.079, 0.985, 0], [0.022, 0.065, 0.008], 0.15, w.p, bm);
         if (st.shield === 'wingp' || st.membrane) F('wingp', [0, -0.45, 0], [0.07, 0.05, 0.02], 0, w.s, acc);
         else if (st.edge === 'cleaver' || st.edge === 'jagged') F('hexp', [0, -0.45, 0], [0.07, 0.03, 0.03], 0, w.s, acc);
-        else W('ring', chain(translate(0, -0.45, 0), scale(0.07, 0.9, 0.07)), hex(w.s), acc);               // round guard
+        else { W('tube', chain(translate(0, -0.465, 0), scale(0.066, 0.016, 0.066)), hex(w.s), acc); W('ring', chain(translate(0, -0.457, 0), scale(0.066, 0.12, 0.066)), hex(w.p), metal); } // flat round guard
         bx([0, -0.43, 0], [0.035, 0.012, 0.02], w.s, acc);
         cyl([0, -0.78, 0], 0.018, 0.32, grip, cloth); wrap(-0.76, -0.47, 0.02);
         W('facet', chain(translate(0, -0.8, 0), scale(0.022, 0.022, 0.022)), hex(w.s), acc);
@@ -528,13 +630,16 @@ export function buildModel(look) {
       case 'sword-shield':
         shield(W, [0, 0, -0.02], 0.19);
         // One-handed sword at the hip.
+        P(edgeShape, chain(translate(-0.2, 0.96, 0.05), rotZ(-0.2), scale(0.034, 0.205, 0.004)), hex('#e6e2da'), edge);
         P(edgeShape, chain(translate(-0.2, 0.96, 0.05), rotZ(-0.2), scale(0.032, 0.2, 0.008)), hex(w.p), bm);
+        P('box', chain(translate(-0.198, 0.94, 0.058), rotZ(-0.2), scale(0.002, 0.13, 0.002)), hex('#1a1410'), metal);
         P('hexp', chain(translate(-0.18, 0.75, 0.05), rotZ(-0.2), scale(0.06, 0.02, 0.02)), hex(w.s), acc);
         P('tube', chain(translate(-0.175, 0.66, 0.05), rotZ(-0.2), scale(0.014, 0.09, 0.014)), hex(grip), cloth);
         Object.assign(A, { spine: [[0.17, 0.1, 1], [0.17, -0.08, 1], [-0.17, 0.1, -1], [-0.17, -0.08, -1]], guard: [0, 0.2], base: [0, -0.23], core: [0, -0.14, 0.14] });
         break;
       case 'dual-blades':
         for (const r of [-0.35, 0.35]) {
+          W(edgeShape, chain(rotZ(r), translate(0, 0.08, 0), scale(0.034, 0.328, 0.004)), '#e6e2da', edge);
           W(edgeShape, chain(rotZ(r), translate(0, 0.08, 0), scale(0.032, 0.32, 0.008)), w.p, bm);
           W('box', chain(rotZ(r), translate(0.008, 0.04, 0.007), scale(0.006, 0.24, 0.004)), st.glow || w.s, st.glow ? gm : acc);
           W('ring', chain(rotZ(r), translate(0, -0.25, 0), scale(0.04, 0.5, 0.04)), hex(w.s), acc);
@@ -579,12 +684,13 @@ export function buildModel(look) {
         break;
       case 'switch-axe':
         cyl([0, -0.5, 0], 0.026, 0.88, grip, cloth); wrap(-0.5, -0.15, 0.029);
-        F(edgeShape, [0.1, 0.33, 0], [0.15, 0.13, 0.016], -1.5708, w.p, bm);
+        honed(edgeShape, [0.1, 0.33, 0], [0.15, 0.13, 0.016], -1.5708, w.p, bm);
+        studs([[0.0, 0.42, 0.02], [0.0, 0.24, 0.02]]);
         bx([0.07, 0.33, 0.012], [0.04, 0.1, 0.008], w.s, acc); bx([-0.03, 0.25, 0], [0.025, 0.12, 0.03], w.s, acc, 'plate');
         Object.assign(A, { spine: [[-0.03, 0.42, -1], [-0.03, 0.28, -1]], guard: [0, 0.12], base: [0, -0.52], head: [0.1, 0.33], core: [0.12, 0.24, 0.42] });
         break;
       case 'charge-blade':
-        F(edgeShape, [-0.06, 0.08, 0], [0.048, 0.42, 0.014], 0, w.p, bm);
+        honed(edgeShape, [-0.06, 0.08, 0], [0.048, 0.42, 0.014], 0, w.p, bm);
         if ((st.edge || 'straight') === 'straight') bx([-0.105, 0.05, 0], [0.005, 0.37, 0.007], '#ecebe6', edge);
         for (let i = 0; i < 3; i++) W('tube', chain(translate(-0.06, -0.15 + i * 0.07, 0.016), rotX(1.5708), scale(0.014, 0.012, 0.014)), hex(st.glow || w.s), { ...acc, emit: 0.5 });
         shield(W, [0.1, 0.0, -0.03], 0.12);
@@ -642,8 +748,11 @@ export function buildModel(look) {
       const a = (i / 10) * Math.PI * 2, c = Math.cos(a), sn = Math.sin(a);
       wcone([G[0] + c * 0.035, G[1], sn * 0.03], [G[0] + c * 0.085, G[1] - 0.09 - (i % 3) * 0.015, sn * 0.06], 0.02, st.p ? w.s : '#d8c49a', furMat, 'cone');
     }
-    if (st.chains && G) for (let i = 0; i < 6; i++)                                                    // hanging chain
-      W('ring', chain(translate(G[0] + 0.05 + Math.sin(i * 0.5) * 0.015, G[1] - 0.03 - i * 0.034, 0.02), rotY(i % 2 ? 1.5708 : 0), scale(0.016, 0.45, 0.016)), '#a0a2aa', chainMat);
+    if (st.chains && G) {                                                                              // hanging chains with real links
+      chainPath([[G[0] + 0.05, G[1] - 0.01, 0.02], [G[0] + 0.07, G[1] - 0.1, 0.03], [G[0] + 0.06, G[1] - 0.2, 0.02]], 0.011, '#a0a2aa', chainMat, W);
+      chainPath(swag([G[0] - 0.06, G[1] + 0.02, 0.02], [G[0] + 0.06, G[1] + 0.02, 0.02], 0.06, 10), 0.009, '#a0a2aa', chainMat, W);
+      chainPath(helix([G[0], G[1] - 0.04, 0], [G[0], G[1] - 0.18, 0], 0.03, 2.5, 40), 0.009, '#a0a2aa', chainMat, W);
+    }
     if (st.crystals) A.spine.forEach(([x, y, sd]) => W('crystal', chain(translate(x + sd * 0.02, y, 0.01), rotZ(-sd * 0.7), scale(0.02, 0.07, 0.02)), hex(st.glow || w.s), { ...gemMat, emit: 0.35 }));
     if (st.scales) A.spine.forEach(([x, y, sd]) => { for (const dy of [0, 0.045]) F('hexp', [x - sd * 0.035, y + dy, 0.018], [0.018, 0.018, 0.005], 0, w.s, om); });
     if (st.tentacle && G) for (const sd of [-1, 1]) {                                                  // curling tendrils
