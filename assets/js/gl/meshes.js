@@ -136,3 +136,78 @@ export function disc(seg = 40) {
   for (let j = 0; j < seg; j++) idx.push(0, j + 2, j + 1);
   return finish(pos, nor, idx);
 }
+
+/**
+ * Flat-shaded copy of an indexed mesh: every triangle gets its own face normal (oriented like the
+ * original smooth normals), which turns round primitives into crisp, forged-looking facets.
+ */
+export function flatten(m) {
+  const pos = [], nor = [], idx = [];
+  const P = i => [m.pos[i * 3], m.pos[i * 3 + 1], m.pos[i * 3 + 2]];
+  const N = i => [m.nor[i * 3], m.nor[i * 3 + 1], m.nor[i * 3 + 2]];
+  for (let t = 0; t < m.idx.length; t += 3) {
+    const [a, b, c] = [m.idx[t], m.idx[t + 1], m.idx[t + 2]];
+    const pa = P(a), pb = P(b), pc = P(c);
+    const u = [pb[0] - pa[0], pb[1] - pa[1], pb[2] - pa[2]], v = [pc[0] - pa[0], pc[1] - pa[1], pc[2] - pa[2]];
+    let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+    const l = Math.hypot(...n);
+    if (l < 1e-9) continue; // degenerate (poles)
+    n = n.map(x => x / l);
+    const s = [N(a), N(b), N(c)].reduce((acc, q) => [acc[0] + q[0], acc[1] + q[1], acc[2] + q[2]], [0, 0, 0]);
+    if (n[0] * s[0] + n[1] * s[1] + n[2] * s[2] < 0) n = n.map(x => -x);
+    for (const p of [pa, pb, pc]) { pos.push(...p); nor.push(...n); idx.push(idx.length); }
+  }
+  return finish(pos, nor, idx);
+}
+
+/**
+ * Forged plate: a 2D outline (points in [-1,1], star-shaped around the origin) extruded along Z,
+ * with a raised central ridge on both faces and bevelled edges. Flat-shaded.
+ */
+export function plate(outline, ridge = 1, rim = 0.3) {
+  const pos = [], nor = [], idx = [];
+  const tri = (p0, p1, p2, out) => {
+    const u = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]], v = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
+    let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+    const l = Math.hypot(...n);
+    if (l < 1e-9) return;
+    n = n.map(x => x / l);
+    if (n[0] * out[0] + n[1] * out[1] + n[2] * out[2] < 0) n = n.map(x => -x);
+    for (const p of [p0, p1, p2]) { pos.push(...p); nor.push(...n); idx.push(idx.length); }
+  };
+  const k = outline.length;
+  for (let i = 0; i < k; i++) {
+    const [ax, ay] = outline[i], [bx, by] = outline[(i + 1) % k];
+    tri([0, 0, ridge], [ax, ay, rim], [bx, by, rim], [0, 0, 1]);
+    tri([0, 0, -ridge], [bx, by, -rim], [ax, ay, -rim], [0, 0, -1]);
+    const out = [(ax + bx) / 2, (ay + by) / 2, 0];
+    tri([ax, ay, rim], [bx, by, rim], [bx, by, -rim], out);
+    tri([ax, ay, rim], [bx, by, -rim], [ax, ay, -rim], out);
+  }
+  return finish(pos, nor, idx);
+}
+
+/** Saw-tooth edge between two y values on side x (teeth lean towards the tip). */
+function teeth(x, y0, y1, n, depth, lean = 0.1) {
+  const pts = [];
+  for (let i = 0; i < n; i++) {
+    const t0 = y0 + (y1 - y0) * (i / n), t1 = y0 + (y1 - y0) * ((i + 0.5) / n);
+    pts.push([x, t0], [x * (1 + depth), t1 + lean]);
+  }
+  return pts;
+}
+
+/** Outlines for forged plates and blades (y up, tip at +1). */
+export const OUTLINES = {
+  kite: [[0, 1], [0.7, 0.35], [0.55, -0.7], [0, -1], [-0.55, -0.7], [-0.7, 0.35]],
+  shard: [[0, 1], [0.38, 0.25], [0.25, -1], [-0.25, -1], [-0.38, 0.25]],
+  fang: [[0, 1], [0.5, -1], [-0.5, -1]],
+  hexp: [[0, 1], [0.87, 0.5], [0.87, -0.5], [0, -1], [-0.87, -0.5], [-0.87, 0.5]],
+  wingp: [[-1, -0.3], [-0.5, 0.5], [0.1, 1], [1, 0.75], [0.55, 0.35], [0.95, 0.1], [0.45, -0.15], [0.75, -0.55], [0.1, -0.5], [-0.3, -0.8]],
+  'blade-straight': [[0, 1], [1, 0.82], [1, -1], [-1, -1], [-1, 0.82]],
+  'blade-serrated': [[0, 1], [1, 0.82], ...teeth(1, 0.7, -0.9, 7, 0.32), [1, -1], [-1, -1], ...teeth(-1, -0.9, 0.7, 7, 0.32), [-1, 0.82]],
+  'blade-jagged': [[0.2, 1], [1.25, 0.72], [0.9, 0.5], [1.4, 0.18], [0.95, -0.05], [1.3, -0.4], [0.9, -0.6], [1, -1], [-1, -1], [-1, -0.3], [-1.25, -0.1], [-1, 0.25], [-1.15, 0.55], [-0.8, 0.8]],
+  'blade-leaf': [[0, 1], [0.75, 0.72], [1.15, 0.3], [1.05, -0.2], [0.7, -0.75], [0.6, -1], [-0.6, -1], [-0.7, -0.75], [-1.05, -0.2], [-1.15, 0.3], [-0.75, 0.72]],
+  'blade-cleaver': [[-1, 1], [0.55, 1], [1.15, 0.55], [1.15, 0.1], [0.95, 0.05], [1, -1], [-1, -1], [-1, 0.5], [-1.2, 0.62]],
+  'blade-curved': [[0.55, 1], [1, 0.6], [1, -1], [-1, -1], [-1, 0.45], [-0.4, 0.85]]
+};

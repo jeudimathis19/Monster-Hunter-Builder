@@ -1,7 +1,7 @@
 // Small WebGL renderer: smooth-shaded parts with warm key light, cool fill, rim light and soft ground shadow.
 
 import { perspective, lookAt, mul, normalMat, rotY, ident } from './math.js';
-import { sphere, dome, tube, roundBox, ring, disc } from './meshes.js';
+import { sphere, dome, tube, roundBox, ring, disc, flatten, plate, OUTLINES } from './meshes.js';
 
 const VS = `
 attribute vec3 aPos; attribute vec3 aNor;
@@ -103,7 +103,13 @@ const MESH_FACTORIES = {
   disc: () => disc(),
   tube: () => tube(1, 1, 26, 4),
   cone: () => tube(1, 0.02, 18, 4),
-  taper: () => tube(1, 0.6, 18, 3)
+  taper: () => tube(1, 0.6, 18, 3),
+  // Faceted (flat-shaded) variants for forged armor plates.
+  facet: () => flatten(sphere(7, 10)),
+  fdome: () => flatten(dome(4, 10)),
+  plate: () => flatten(roundBox(0.14, 6, 8)),
+  fcone: () => flatten(tube(1, 0.02, 6, 1)),
+  ...Object.fromEntries(Object.entries(OUTLINES).map(([k, o]) => [k, () => plate(o)]))
 };
 
 let software = false;
@@ -155,7 +161,10 @@ export class Renderer {
     if (this.meshes.has(name)) return this.meshes.get(name);
     const gl = this.gl;
     // "tube:0.6" = tube whose top radius is 0.6 x the bottom radius.
-    const data = name.startsWith('tube:') ? tube(1, Math.max(0.02, +name.slice(5)), 26, 4) : MESH_FACTORIES[name]();
+    // "ftube:0.8" = the same, with 8 flat facets.
+    const data = name.startsWith('tube:') ? tube(1, Math.max(0.02, +name.slice(5)), 26, 4)
+      : name.startsWith('ftube') ? flatten(tube(1, Math.max(0.02, +(name.split(':')[1] || 1)), 8, 1))
+      : MESH_FACTORIES[name]();
     const m = { count: data.idx.length };
     m.pos = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, m.pos); gl.bufferData(gl.ARRAY_BUFFER, data.pos, gl.STATIC_DRAW);
     m.nor = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, m.nor); gl.bufferData(gl.ARRAY_BUFFER, data.nor, gl.STATIC_DRAW);
