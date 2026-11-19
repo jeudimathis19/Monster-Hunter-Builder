@@ -41,7 +41,8 @@ jobs:
 
       - name: Commit changes
         run: |
-          if git diff --quiet -- data scripts/gathering.json; then
+          # Only the site's data files matter: gathering.json carries a run date.
+          if git diff --quiet -- data; then
             echo "Game data unchanged."
             exit 0
           fi
