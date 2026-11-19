@@ -21,6 +21,8 @@ const STRINGS = {
     'footer.fan': 'Site de fans non officiel, sans lien avec Capcom. Monster Hunter Wilds est une marque de Capcom Co., Ltd.',
     'footer.data': 'Données de jeu : base communautaire MHDB et wiki Fextralife. Builds recommandés inspirés de Game8 et mhwildsbuild.com.',
     'footer.hr': 'Le rang de chasseur indiqué est une estimation basée sur la rareté et les monstres à chasser.',
+    'footer.credit': 'Site créé par',
+    'footer.github': ' (profil GitHub)',
 
     'common.loading': 'Chargement des données de chasse…',
     'common.error': 'Impossible de charger les données.',
@@ -356,6 +358,8 @@ const STRINGS = {
     'footer.fan': 'Unofficial fan site, not affiliated with Capcom. Monster Hunter Wilds is a trademark of Capcom Co., Ltd.',
     'footer.data': 'Game data: MHDB community database and Fextralife wiki. Recommended builds inspired by Game8 and mhwildsbuild.com.',
     'footer.hr': 'Hunter Rank requirements are estimates based on gear rarity and the monsters to hunt.',
+    'footer.credit': 'Site created by',
+    'footer.github': ' (GitHub profile)',
 
     'common.loading': 'Loading hunting data…',
     'common.error': 'Could not load the data.',
