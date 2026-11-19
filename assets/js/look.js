@@ -30,6 +30,59 @@ const SET_COLORS = [
   ['gala-suit', '#1e1e24', '#d0b070'], ['feudal-soldier', '#6a3a2a', '#c0a060'], ['noblesse', '#4a2a5a', '#d0b070']
 ];
 
+// Weapon styles per crafting tree: palette and motifs inspired by the monster (original shapes).
+// edge: blade outline; shield: shield outline; other keys toggle ornaments in the 3D model.
+const WEAPON_STYLES = [
+  ['g. rathalos', { p: '#d6d2ca', s: '#d8552e', edge: 'serrated', shield: 'wingp', claw: true, spikes: true, glow: '#ff9a3a' }],
+  ['rathalos', { p: '#a8322a', s: '#2f2a26', edge: 'serrated', shield: 'wingp', claw: true, spikes: true }],
+  ['rathian', { p: '#5f7f3a', s: '#d8cba0', edge: 'leaf', shield: 'round', barb: true, scales: true }],
+  ['g. arkveld', { p: '#d8d8dc', s: '#3a3a44', edge: 'cleaver', shield: 'kite', chains: true, glow: '#cfe8ff' }],
+  ['arkveld', { p: '#3e4450', s: '#c9ccd6', edge: 'cleaver', shield: 'kite', chains: true, glow: '#cfe8ff' }],
+  ['rey dau', { p: '#d2a636', s: '#2a2622', edge: 'jagged', shield: 'shard', bladefins: true, glow: '#ffe45c' }],
+  ['uth duna', { p: '#2e4e6e', s: '#d9d2c0', edge: 'leaf', shield: 'round', membrane: true }],
+  ['nu udra', { p: '#2a1c1e', s: '#e26a2c', edge: 'curved', shield: 'round', tentacle: true, glow: '#ff6a2a' }],
+  ['jin dahaad', { p: '#9cc8dc', s: '#eef6fa', edge: 'jagged', shield: 'hexp', crystals: true, glow: '#bff3ff' }],
+  ['zoh shia', { p: '#ece6d4', s: '#c9a95a', edge: 'straight', shield: 'kite', halo: true, glow: '#ffe9a8' }],
+  ['g. doshaguma', { p: '#7a6a5a', s: '#e0d6c2', edge: 'cleaver', shield: 'round', fur: true }],
+  ['doshaguma', { p: '#6b4a32', s: '#d8c49a', edge: 'cleaver', shield: 'round', fur: true, claw: true }],
+  ['gore magala', { p: '#2f2a3a', s: '#8a6ab0', edge: 'jagged', shield: 'wingp', membrane: true, spikes: true }],
+  ['mizutsune', { p: '#ead6de', s: '#e08aaa', edge: 'curved', shield: 'round', bubbles: true, fur: true }],
+  ['lagiacrus', { p: '#2f5f9a', s: '#e8e0c8', edge: 'serrated', shield: 'hexp', spikes: true, glow: '#9fdcff' }],
+  ['seregios', { p: '#c9a43a', s: '#3f4a3a', edge: 'serrated', shield: 'shard', bladefins: true }],
+  ['quematrice', { p: '#8a3a22', s: '#ffb04a', edge: 'jagged', shield: 'kite', spikes: true, glow: '#ff9a3a' }],
+  ['lala barina', { p: '#c2405a', s: '#f0d6c6', edge: 'leaf', shield: 'round', petals: true }],
+  ['balahara', { p: '#c9b48a', s: '#4a6a7a', edge: 'curved', shield: 'round', scales: true }],
+  ['hirabami', { p: '#5a7a96', s: '#e4e8ee', edge: 'leaf', shield: 'kite', membrane: true }],
+  ['nerscylla', { p: '#3a3046', s: '#c04a6a', edge: 'jagged', shield: 'hexp', spikes: true }],
+  ['congalala', { p: '#c86a8a', s: '#5a3a2a', edge: 'cleaver', shield: 'round', fur: true }],
+  ['blangonga', { p: '#e4e6e8', s: '#8a9aa8', edge: 'straight', shield: 'round', fur: true, spikes: true }],
+  ['yian kut-ku', { p: '#d88a7a', s: '#e8dcc0', edge: 'leaf', shield: 'round', membrane: true }],
+  ['gypceros', { p: '#6b5aa0', s: '#d0c040', edge: 'leaf', shield: 'round', scales: true }],
+  ['ajarakan', { p: '#8a3a22', s: '#ffb04a', edge: 'cleaver', shield: 'hexp', spikes: true, rock: true, glow: '#ff8a3a' }],
+  ['gravios', { p: '#5e5a58', s: '#d0582e', edge: 'cleaver', shield: 'hexp', rock: true, glow: '#ff7a2a' }],
+  ['g. fulgur', { p: '#d8d0c0', s: '#3a8fd8', edge: 'serrated', shield: 'kite', fur: true, spikes: true, glow: '#9fdcff' }],
+  ['g. ebony', { p: '#2a2a2e', s: '#c8442b', edge: 'jagged', shield: 'wingp', spikes: true, fur: true }],
+  ['xu wu', { p: '#3d3a46', s: '#c8c0d8', edge: 'curved', shield: 'round', tentacle: true }],
+  ['rompopolo', { p: '#5a3a6a', s: '#8ad84a', edge: 'jagged', shield: 'round', spikes: true, glow: '#a8ff6a' }],
+  ['chatacabra', { p: '#7a8a5a', s: '#d9c9a0', edge: 'cleaver', shield: 'round', rock: true, bone: true }],
+  ['omega', { p: '#e8e8ec', s: '#3a8fd8', edge: 'straight', shield: 'hexp', tech: true, glow: '#6ad8ff' }],
+  ['vespoid', { p: '#c8a03a', s: '#2a2420', edge: 'straight', shield: 'kite', membrane: true }],
+  ['bone', { p: '#d8cdb0', s: '#7a5a3a', edge: 'cleaver', shield: 'round', bone: true }],
+  ['ore', { p: '#8c8a86', s: '#c9b892', edge: 'straight', shield: 'kite', rivets: true }],
+  ['expedition', { p: '#9a9690', s: '#8a5a3a', edge: 'straight', shield: 'kite', rivets: true }],
+  ['workshop', { p: '#9a9690', s: '#c9a46a', edge: 'straight', shield: 'kite', rivets: true }],
+  ['dark knight', { p: '#2a2a30', s: '#b23a3a', edge: 'jagged', shield: 'kite', spikes: true }],
+  ['azure', { p: '#2f6fa0', s: '#e0e0e0', edge: 'straight', shield: 'kite' }]
+];
+const BASE_STYLE = { edge: 'straight', shield: 'kite' };
+
+/** Style of a weapon from its crafting tree ("Rathalos Tree" -> Rathalos style). */
+export function weaponStyle(tree) {
+  const t = String(tree || '').toLowerCase().replace(/ tree$/, '');
+  const hit = WEAPON_STYLES.find(([k]) => t === k || t.startsWith(k + ' ') || t.startsWith(k));
+  return hit ? hit[1] : BASE_STYLE;
+}
+
 export const SKIN_TONES = ['#f2d0b4', '#e0b08a', '#c68e64', '#9a6a46', '#6e4a32', '#4a3020'];
 export const UNDERSUIT = '#35302b';
 
@@ -94,8 +147,13 @@ export function lookFor(r, colors = {}) {
     parts,
     head: headShape(r.armor.head),
     skin: (colors.skin && colors.skin.p) || SKIN_TONES[1],
-    weapon: w ? { kind: w.k, p: wo.p || '#8c8a86', s: wo.s || elementColor(w.el), rarity: w.r } : null
+    weapon: w ? weaponLook(w, wo) : null
   };
+}
+
+function weaponLook(w, wo) {
+  const st = weaponStyle(w.ser);
+  return { kind: w.k, p: wo.p || st.p || '#8c8a86', s: wo.s || st.s || elementColor(w.el), rarity: w.r, style: st, element: elementColor(w.el) };
 }
 
 export const PALETTES = {
