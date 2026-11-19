@@ -104,13 +104,21 @@ export function buildModel(look) {
   const P = (mesh, m, color, mat = {}) => parts.push({ mesh, m, color: Array.isArray(color) ? color : hex(color), ...mat });
 
   // Material presets
-  const cloth = { spec: 0.05, shin: 8 };
-  const leather = { spec: 0.18, shin: 14, sheen: 0.04 };
-  const skinMat = { spec: 0.12, shin: 16, sheen: 0.05 };
-  const furMat = { spec: 0.02, shin: 4, sheen: 0.14 };
-  const boneMat = { spec: 0.35, shin: 24, sheen: 0.08 };
-  const gemMat = { spec: 1, shin: 90, emit: 0.18, sheen: 0.2 };
-  const armorMat = t => ({ spec: 0.18 + (t.metal || 0.3) * 0.75, shin: 20 + (t.metal || 0.3) * 64, sheen: t.sheen || 0.03 });
+  // Surface patterns: 1 hammered metal, 2 leather, 3 scales, 4 fur, 5 cloth, 6 bone, 7 crystal.
+  const cloth = { spec: 0.06, shin: 8, pattern: 5, bump: 0.35, vary: 0.1 };
+  const leather = { spec: 0.22, shin: 16, sheen: 0.04, pattern: 2, bump: 0.6, vary: 0.16 };
+  const skinMat = { spec: 0.12, shin: 16, sheen: 0.05, pattern: 2, bump: 0.08, vary: 0.03 };
+  const furMat = { spec: 0.03, shin: 4, sheen: 0.16, pattern: 4, bump: 1.4, vary: 0.32 };
+  const boneMat = { spec: 0.35, shin: 26, sheen: 0.08, pattern: 6, bump: 0.7, vary: 0.18 };
+  const gemMat = { spec: 1, shin: 110, emit: 0.18, sheen: 0.25, pattern: 7, bump: 0.25, vary: 0.12, metal: 0.35 };
+  const rivetMat = { spec: 1, shin: 90, metal: 0.9, pattern: 1, bump: 0.2, vary: 0.05 };
+  const armorMat = t => {
+    const metal = t.metal ?? 0.3;
+    return {
+      spec: 0.2 + metal * 0.75, shin: 22 + metal * 70, sheen: t.sheen || 0.03, metal: metal > 0.4 ? metal * 0.8 : metal * 0.4,
+      pattern: t.scales ? 3 : t.fur && metal < 0.4 ? 2 : 1, bump: t.scales ? 1.0 : 0.55, vary: t.scales ? 0.22 : 0.14
+    };
+  };
 
   // ---------------------------------------------------------------- Shape helpers
   const ell = (c, r, color, mat, rot = [0, 0, 0], mesh = 'sphere') =>
@@ -155,6 +163,8 @@ export function buildModel(look) {
       box([c[0], c[1] - i * step, c[2] + i * 0.004], [half[0] * k, half[1], half[2]], color, mat, rot, 'slab');
     }
   };
+  /** Row of small round rivets. */
+  const rivets = (points, r = 0.007) => points.forEach(pt => ell(pt, [r, r, r * 0.7], '#c9b892', rivetMat, [0, 0, 0], 'lowsphere'));
   const crystalCluster = (c, dir, color, n = 3, size = 1) => {
     for (let i = 0; i < n; i++) {
       const a = (i - (n - 1) / 2) * 0.45;
@@ -254,6 +264,8 @@ export function buildModel(look) {
       ell([0, 1.45, 0], [0.212 * b, 0.075, 0.145 * b], chest.p, cm);
       for (const s of [-1, 1]) box([s * 0.075, 1.32, 0.118 * b], [0.085 * b, 0.11, 0.032], chest.p, cm, [-0.12, s * 0.28, 0], 'slab'); // pectoral plates
       box([0, 1.335, 0.155 * b], [0.022, 0.1, 0.014], chest.s, cm, [-0.12, 0, 0]);         // sternum ridge
+      for (const sd of [-1, 1]) rivets([[sd * 0.13 * b, 1.4, 0.13 * b], [sd * 0.145 * b, 1.33, 0.135 * b], [sd * 0.14 * b, 1.26, 0.13 * b]]);
+      for (const sd of [-1, 1]) box([sd * 0.075, 1.215, 0.135 * b], [0.08 * b, 0.008, 0.02], chest.s, cm, [-0.12, sd * 0.28, 0]); // plate edge trims
       ell([0, 1.39, 0.165 * b], [0.03, 0.03, 0.012], chest.s, ht.glow || ct.glow ? gemMat : cm); // chest emblem
       for (const [y, k] of [[1.19, 1], [1.13, 0.97], [1.07, 0.94]]) ring([0, y, 0.004], [0.154 * b * k, 0.13, 0.11 * b * k], chest.s, cm); // abdominal lames
       for (const s of [-1, 1]) box([s * 0.1, 1.38, -0.11 * b], [0.07, 0.12, 0.02], chest.p, cm, [0.15, s * -0.3, 0], 'slab'); // back plates
@@ -264,6 +276,7 @@ export function buildModel(look) {
       // Layered pauldrons with a trimmed edge.
       for (const [i, k] of [[0, 1], [1, 0.86], [2, 0.72]]) ell([s * (0.262 + i * 0.018), 1.44 - i * 0.035, 0], [0.11 * b * k, 0.075 * b * k, 0.11 * b * k], i === 1 ? chest.s : chest.p, cm, [0, 0, s * (-0.35 - i * 0.15)], 'dome');
       ring([s * 0.29, 1.405, 0], [0.085 * b, 0.25, 0.085 * b], chest.s, cm, [0, 0, s * -0.5]);
+      rivets([0, 1, 2, 3, 4].map(i => { const a = -0.9 + i * 0.45; return [s * (0.29 + Math.cos(a) * 0.04), 1.43 + Math.sin(a) * 0.012, Math.sin(a) * 0.075 * b]; }), 0.008);
       if (ct.spikes) spikes([[s * 0.28, 1.49, 0.03], [s * 0.3, 1.48, -0.02], [s * 0.32, 1.46, -0.06]], [s * 0.45, 0.85, -0.3], 0.1, 0.018, chest.s, am);
       if (ct.fins) { ell([s * 0.33, 1.52, -0.07], [0.01, 0.11, 0.08], chest.s, cm, [0.3, 0, s * -0.6]); ell([s * 0.35, 1.45, -0.08], [0.008, 0.07, 0.06], chest.s, cm, [0.4, 0, s * -0.9]); }
       if (ct.crystals) crystalCluster([s * 0.3, 1.5, -0.02], s * -0.5, chest.s, 3, 1.1);
@@ -290,6 +303,7 @@ export function buildModel(look) {
     limb([s * 0.282, 1.16, 0.01], [s * 0.318, 0.88, 0.05], 0.066 * b, (robeSleeve ? 0.09 : 0.056) * b, arms.p, robeSleeve ? cloth : am); // vambrace
     if (!robeSleeve) for (const y of [1.06, 0.96]) ring([s * (0.296 + (1.16 - y) * 0.12), y, 0.026], [0.064 * b, 0.25, 0.064 * b], arms.s, am, [0, 0, s * -0.12]);
     ell([s * 0.283, 1.15, 0.012], [0.064 * b, 0.052 * b, 0.064 * b], arms.s, am);      // elbow cop
+    if (!robeSleeve) rivets([[s * 0.305, 1.06, 0.09], [s * 0.315, 0.96, 0.095]], 0.007);
     cone([s * 0.29, 1.15, -0.03], [s * 0.31, 1.15, -0.1], 0.025, arms.s, at.spikes ? acc : am); // elbow point
     limb([s * 0.245, 1.4, 0], [s * 0.28, 1.2, 0.01], 0.066 * b, 0.06 * b, arms.p, { ...am, spec: am.spec * 0.8 }); // rerebrace
     ring([s * 0.255, 1.33, 0.003], [0.068 * b, 0.25, 0.068 * b], arms.s, am, [0, 0, s * -0.15]);
@@ -317,6 +331,7 @@ export function buildModel(look) {
     ring([0, 0.975, 0], [0.175 * b, 0.12, 0.125 * b], waist.s, wm);
     box([0, 0.975, 0.127 * b], [0.04, 0.038, 0.012], waist.s, { spec: 0.9, shin: 70 }, [0, 0, 0], 'slab'); // buckle
     for (const s of [-1, 1]) box([s * 0.13 * b, 0.93, 0.09 * b], [0.035, 0.035, 0.025], '#4a3424', leather, [0, s * 0.6, 0], 'slab'); // pouches
+    rivets([-3, -2, -1, 1, 2, 3].map(i => { const a = Math.PI / 2 + i * 0.32; return [Math.cos(a) * 0.177 * b, 0.975, Math.sin(a) * 0.127 * b]; }), 0.007);
     const robe = wt.robe || T.chest.robe;
     if (robe) {
       P('tube:0.56', chain(translate(0, 0.31, 0), scale(0.32 * b, 0.63, 0.26 * b)), hex(waist.p), { ...cloth, sheen: 0.08 });
@@ -352,6 +367,7 @@ export function buildModel(look) {
     limb([s * 0.107, 0.5, 0.015], [s * 0.11, 0.1, -0.005], 0.074 * b, 0.068 * b, legs.p, lm);         // greave
     box([s * 0.108, 0.32, 0.07 * b], [0.04, 0.15, 0.012], legs.s, lm, [0.03, 0, 0], 'slab');           // shin ridge
     for (const y of [0.42, 0.2]) ring([s * 0.109, y, 0.005], [0.075 * b, 0.25, 0.075 * b], legs.s, lm);
+    rivets([[s * 0.108, 0.42, 0.083 * b], [s * 0.108, 0.2, 0.083 * b], [s * 0.108, 0.62, 0.095 * b]], 0.008);
     ell([s * 0.11, 0.06, 0.05], [0.07 * b, 0.058, 0.13], legs.p, lm);                                  // sabaton
     cone([s * 0.11, 0.05, 0.15], [s * 0.11, 0.035, 0.22], 0.035, legs.s, lm);                         // pointed toe
     ell([s * 0.11, 0.032, 0.07], [0.072 * b, 0.022, 0.135], legs.s, leather);                        // sole
@@ -365,8 +381,9 @@ export function buildModel(look) {
   // ---------------------------------------------------------------- Weapon (on the back)
   if (look.weapon) {
     const w = look.weapon;
-    const metal = { spec: 0.95, shin: 90, sheen: 0.12 };
-    const acc = { spec: 0.6, shin: 40, emit: 0.12 };
+    const metal = { spec: 0.95, shin: 100, sheen: 0.12, metal: 0.85, pattern: 1, bump: 0.3, vary: 0.08 };
+    const edge = { spec: 1, shin: 140, metal: 0.95, sheen: 0.2, pattern: 0 };
+    const acc = { spec: 0.6, shin: 40, emit: 0.12, pattern: 6, bump: 0.4, vary: 0.12 };
     const grip = '#3a2a20';
     const back = (...ms) => chain(translate(0, 1.22, -0.2), rotZ(0.55), ...ms);
     const W = (mesh, m, color, mat) => P(mesh, back(m), color, mat);
@@ -377,12 +394,15 @@ export function buildModel(look) {
     switch (w.kind) {
       case 'great-sword':
         bx([0, 0.12, 0], [0.09, 0.47, 0.012], w.p, metal); tip([0, 0.59, 0], 0.09, 0.14, w.p, metal);
+        for (const s of [-1, 1]) bx([s * 0.088, 0.12, 0], [0.006, 0.46, 0.007], '#e8e4dc', edge);      // honed edges
+        bx([0, 0.1, 0.011], [0.012, 0.38, 0.004], '#1a1410', metal);                                 // fuller
         bx([0, 0.12, 0.006], [0.018, 0.42, 0.012], w.s, acc);
         for (const s of [-1, 1]) tip([s * 0.09, 0.3, 0], 0.025, 0.08, w.p, metal, s * -1.2);
         bx([0, -0.37, 0], [0.14, 0.03, 0.04], w.s, acc, 'slab'); cyl([0, -0.62, 0], 0.022, 0.23, grip, cloth); wrap(-0.6, -0.4, 0.024);
         W('sphere', chain(translate(0, -0.64, 0), scale(0.035, 0.035, 0.035)), hex(w.s), acc); break;
       case 'long-sword':
         bx([0, 0.2, 0], [0.024, 0.58, 0.007], w.p, metal); tip([0, 0.8, 0], 0.024, 0.08, w.p, metal);
+        bx([-0.022, 0.2, 0], [0.004, 0.57, 0.005], '#ecebe6', edge);                                    // edge
         bx([0.008, 0.2, 0.004], [0.006, 0.55, 0.006], w.s, acc);
         W('ring', chain(translate(0, -0.4, 0), scale(0.06, 0.6, 0.06)), hex(w.s), acc); cyl([0, -0.72, 0], 0.018, 0.31, grip, cloth); wrap(-0.7, -0.42, 0.02); break;
       case 'sword-shield':
@@ -390,7 +410,7 @@ export function buildModel(look) {
         W('sphere', chain(translate(0, 0, 0.02), scale(0.06, 0.06, 0.03)), hex(w.s), acc); for (const s of [-1, 1]) tip([s * 0.17, 0.12, -0.02], 0.025, 0.08, w.s, acc, s * -0.9);
         P('box', chain(translate(-0.2, 0.92, 0.04), rotZ(-0.2), scale(0.022, 0.2, 0.006)), hex(w.p), metal); break;
       case 'dual-blades':
-        for (const r of [-0.35, 0.35]) { W('box', chain(rotZ(r), translate(0, 0.05, 0), scale(0.026, 0.3, 0.007)), w.p, metal); W('cone', chain(rotZ(r), translate(0, 0.35, 0), scale(0.026, 0.08, 0.009)), w.p, metal); W('box', chain(rotZ(r), translate(0.012, 0.05, 0.003), scale(0.008, 0.27, 0.008)), w.s, acc); W('ring', chain(rotZ(r), translate(0, -0.27, 0), scale(0.04, 0.5, 0.04)), hex(w.s), acc); } break;
+        for (const r of [-0.35, 0.35]) { W('box', chain(rotZ(r), translate(-0.024, 0.05, 0), scale(0.004, 0.29, 0.005)), '#ecebe6', edge); W('box', chain(rotZ(r), translate(0, 0.05, 0), scale(0.026, 0.3, 0.007)), w.p, metal); W('cone', chain(rotZ(r), translate(0, 0.35, 0), scale(0.026, 0.08, 0.009)), w.p, metal); W('box', chain(rotZ(r), translate(0.012, 0.05, 0.003), scale(0.008, 0.27, 0.008)), w.s, acc); W('ring', chain(rotZ(r), translate(0, -0.27, 0), scale(0.04, 0.5, 0.04)), hex(w.s), acc); } break;
       case 'hammer':
         cyl([0, -0.45, 0], 0.024, 0.78, grip, cloth); wrap(-0.45, -0.1, 0.027);
         bx([0, 0.36, 0], [0.17, 0.12, 0.12], w.p, metal); bx([0, 0.36, 0], [0.18, 0.045, 0.13], w.s, acc);
@@ -417,6 +437,7 @@ export function buildModel(look) {
         bx([0.07, 0.33, 0.006], [0.04, 0.1, 0.018], w.s, acc); bx([-0.03, 0.25, 0], [0.025, 0.12, 0.03], w.s, acc, 'slab'); break;
       case 'charge-blade':
         bx([-0.06, 0.05, 0], [0.042, 0.38, 0.012], w.p, metal); tip([-0.06, 0.47, 0], 0.042, 0.08, w.p, metal);
+        bx([-0.1, 0.05, 0], [0.005, 0.37, 0.007], '#ecebe6', edge);
         for (let i = 0; i < 3; i++) W('tube', chain(translate(-0.06, -0.15 + i * 0.07, 0.016), rotX(1.5708), scale(0.014, 0.012, 0.014)), hex(w.s), { ...acc, emit: 0.4 });
         bx([0.1, 0.0, -0.02], [0.12, 0.18, 0.025], w.p, metal, 'slab'); ell([0.1, 0.0, 0.01], [0.05, 0.08, 0.02], w.s, acc);
         W('ring', chain(translate(0.1, 0, 0.005), rotX(1.57), scale(0.1, 0.3, 0.15)), hex(w.s), acc); break;
